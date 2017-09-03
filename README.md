@@ -1,4 +1,6 @@
 # intel-mkl-src
+[![Build Status](https://travis-ci.org/termoshtt/rust-intel-mkl.svg?branch=master)](https://travis-ci.org/termoshtt/rust-intel-mkl)
+
 Redistribution of Intel MKL as a crate
 
 ## License
