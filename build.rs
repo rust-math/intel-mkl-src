@@ -25,6 +25,6 @@ use std::env;
 fn main() {
     let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     println!("cargo:rustc-link-lib=static=mkl_intel_ilp64");
-    println!("cargo:rustc-link-lib=static=mkl_intel_thread");
+    println!("cargo:rustc-link-lib=static=gomp");
     println!("cargo:rustc-link-search=native={}/mkl_lib", dir);
 }
