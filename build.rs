@@ -21,10 +21,22 @@
 // SOFTWARE.
 
 use std::env;
+use std::path;
+use std::process::Command;
 
 fn main() {
-    let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let mkl_dir = path::Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join("mkl_lib");
+    let st = Command::new("tar")
+        .args(&["Jxvf", "mkl.tar.xz"])
+        .current_dir(&mkl_dir)
+        .status()
+        .expect("Failed to start decompression (maybe 'tar' is missing?)");
+    if !st.success() {
+        panic!("Failed to extract MKL libraries");
+    }
+
     println!("cargo:rustc-link-lib=static=mkl_intel_ilp64");
     println!("cargo:rustc-link-lib=static=mkl_intel_thread");
-    println!("cargo:rustc-link-search=native={}/mkl_lib", dir);
+    println!("cargo:rustc-link-lib=static=iomp5");
+    println!("cargo:rustc-link-search=native={}", mkl_dir.display());
 }
