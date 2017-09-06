@@ -15,4 +15,4 @@ links = "mkl_intel_ilp64"
 exclude = ["mkl_lib/mkl.tar.xz"]
 
 [build-dependencies]
-git2 = "*"
+git2 = "0.6"
