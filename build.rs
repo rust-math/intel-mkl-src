@@ -20,24 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+extern crate git2;
+
 use std::env;
-use std::path;
+use std::path::*;
 use std::process::Command;
 
+const MKL_ARCHIVE: &'static str = "mkl.tar.xz";
+
+fn get_branch_name<P: AsRef<Path>>(crate_dir: P) -> String {
+    let repo = git2::Repository::open(crate_dir).unwrap();
+    let head = repo.head().unwrap();
+    head.shorthand().unwrap().to_string()
+}
+
 fn main() {
-    let mkl_dir = path::Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join("mkl_lib");
-    let tar = mkl_dir.join("mkl.tar.xz");
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let st = Command::new("tar")
-        .args(&["Jxvf", &tar.to_str().unwrap()])
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let crate_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let branch_name = get_branch_name(&crate_dir);
+    if !out_dir.join(MKL_ARCHIVE).exists() {
+        Command::new("wget")
+            .arg(format!("https://github.com/termoshtt/rust-intel-mkl/raw/{}/mkl_lib/mkl.tar.xz",
+                         branch_name))
+            .current_dir(&out_dir)
+            .status()
+            .expect("Failed to start download (maybe 'wget' is missing?)");
+    }
+    Command::new("tar")
+        .args(&["Jxvf", MKL_ARCHIVE])
         .current_dir(&out_dir)
         .status()
         .expect("Failed to start decompression (maybe 'tar' is missing?)");
-    if !st.success() {
-        panic!("Failed to extract MKL libraries");
-    }
 
-    println!("cargo:rustc-link-search={}", out_dir);
+    println!("cargo:rustc-link-search={}", out_dir.display());
     println!("cargo:rustc-link-lib=dylib=mkl_intel_lp64");
     println!("cargo:rustc-link-lib=dylib=mkl_gnu_thread");
     println!("cargo:rustc-link-lib=dylib=mkl_core");
