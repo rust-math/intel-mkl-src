@@ -28,7 +28,9 @@ const MKL_ARCHIVE: &'static str = "mkl.tar.xz";
 
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let uri = format!("https://github.com/termoshtt/rust-intel-mkl/raw/master/mkl_lib/{}",
+    let oid = "fa01d7dfb31f2ebedb59f2654fb85f4c0badce33";
+    let uri = format!("https://github.com/termoshtt/rust-intel-mkl/raw/{}/mkl_lib/{}",
+                      oid,
                       MKL_ARCHIVE);
     Command::new("wget")
         .args(&["-q", &uri, "-O", MKL_ARCHIVE])
