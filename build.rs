@@ -26,16 +26,18 @@ use std::process::Command;
 
 fn main() {
     let mkl_dir = path::Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join("mkl_lib");
+    let tar = mkl_dir.join("mkl.tar.xz");
+    let out_dir = env::var("OUT_DIR").unwrap();
     let st = Command::new("tar")
-        .args(&["Jxvf", "mkl.tar.xz"])
-        .current_dir(&mkl_dir)
+        .args(&["Jxvf", &tar.to_str().unwrap()])
+        .current_dir(&out_dir)
         .status()
         .expect("Failed to start decompression (maybe 'tar' is missing?)");
     if !st.success() {
         panic!("Failed to extract MKL libraries");
     }
 
-    println!("cargo:rustc-link-search={}", mkl_dir.display());
+    println!("cargo:rustc-link-search={}", out_dir);
     println!("cargo:rustc-link-lib=dylib=mkl_intel_ilp64");
     println!("cargo:rustc-link-lib=dylib=mkl_intel_thread");
     println!("cargo:rustc-link-lib=dylib=mkl_core");
