@@ -11,7 +11,3 @@ readme = "README.md"
 
 build = "build.rs"
 links = "mkl_intel_ilp64"
-
-[dependencies]
-libc = "*"
-
