@@ -38,8 +38,8 @@ fn main() {
     }
 
     println!("cargo:rustc-link-search={}", out_dir);
-    println!("cargo:rustc-link-lib=dylib=mkl_intel_ilp64");
-    println!("cargo:rustc-link-lib=dylib=mkl_intel_thread");
+    println!("cargo:rustc-link-lib=dylib=mkl_intel_lp64");
+    println!("cargo:rustc-link-lib=dylib=mkl_gnu_thread");
     println!("cargo:rustc-link-lib=dylib=mkl_core");
-    println!("cargo:rustc-link-lib=dylib=iomp5");
+    println!("cargo:rustc-link-lib=dylib=gomp");
 }
