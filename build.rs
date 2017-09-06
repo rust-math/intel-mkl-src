@@ -20,28 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-extern crate git2;
-
 use std::env;
 use std::path::*;
 use std::process::Command;
 
 const MKL_ARCHIVE: &'static str = "mkl.tar.xz";
 
-fn get_oid<P: AsRef<Path>>(crate_dir: P) -> String {
-    let repo = git2::Repository::open(crate_dir).unwrap();
-    let head = repo.head().unwrap();
-    head.target().unwrap().to_string()
-}
-
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let crate_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let oid = get_oid(&crate_dir);
-    let uri = format!("https://github.com/termoshtt/rust-intel-mkl/raw/{}/mkl_lib/{}",
-                      oid,
+    let uri = format!("https://github.com/termoshtt/rust-intel-mkl/raw/master/mkl_lib/{}",
                       MKL_ARCHIVE);
-    println!("Download URI = {}", uri);
     Command::new("wget")
         .args(&["-q", &uri, "-O", MKL_ARCHIVE])
         .current_dir(&out_dir)
