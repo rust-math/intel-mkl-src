@@ -21,22 +21,31 @@
 // SOFTWARE.
 
 use std::env;
-use std::path;
+use std::path::*;
 use std::process::Command;
 
+const MKL_ARCHIVE: &'static str = "mkl.tar.xz";
+
 fn main() {
-    let mkl_dir = path::Path::new(&env::var("CARGO_MANIFEST_DIR").unwrap()).join("mkl_lib");
-    let st = Command::new("tar")
-        .args(&["Jxvf", "mkl.tar.xz"])
-        .current_dir(&mkl_dir)
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let oid = "fa01d7dfb31f2ebedb59f2654fb85f4c0badce33";
+    let uri = format!("https://github.com/termoshtt/rust-intel-mkl/raw/{}/mkl_lib/{}",
+                      oid,
+                      MKL_ARCHIVE);
+    Command::new("wget")
+        .args(&["-q", &uri, "-O", MKL_ARCHIVE])
+        .current_dir(&out_dir)
+        .status()
+        .expect("Failed to start download (maybe 'wget' is missing?)");
+    Command::new("tar")
+        .args(&["Jxvf", MKL_ARCHIVE])
+        .current_dir(&out_dir)
         .status()
         .expect("Failed to start decompression (maybe 'tar' is missing?)");
-    if !st.success() {
-        panic!("Failed to extract MKL libraries");
-    }
 
-    println!("cargo:rustc-link-lib=static=mkl_intel_ilp64");
-    println!("cargo:rustc-link-lib=static=mkl_intel_thread");
-    println!("cargo:rustc-link-lib=static=iomp5");
-    println!("cargo:rustc-link-search=native={}", mkl_dir.display());
+    println!("cargo:rustc-link-search={}", out_dir.display());
+    println!("cargo:rustc-link-lib=dylib=mkl_intel_lp64");
+    println!("cargo:rustc-link-lib=dylib=mkl_gnu_thread");
+    println!("cargo:rustc-link-lib=dylib=mkl_core");
+    println!("cargo:rustc-link-lib=dylib=gomp");
 }
