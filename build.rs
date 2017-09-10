@@ -54,7 +54,7 @@ fn download(uri: &str, filename: &str, out_dir: &Path) -> Result<PathBuf> {
 
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let oid = "fa01d7dfb31f2ebedb59f2654fb85f4c0badce33";
+    let oid = "7e47b40340b88356058b4cff187ef7598c64658b";
     let uri = format!(
         "https://github.com/termoshtt/rust-intel-mkl/raw/{}/mkl_lib/{}",
         oid,
