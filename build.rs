@@ -73,11 +73,13 @@ fn main() {
     let archive_path = out_dir.join(MKL_ARCHIVE);
     let md5sum_path = crate_root.join(format!("mkl_lib/{}.md5", MKL_ARCHIVE));
 
-    if !archive_path.exists() {
+    if archive_path.exists() && check_sum(&md5sum_path, &out_dir) {
+        println!("Use existings archive");
+    } else {
         download(&uri, MKL_ARCHIVE, &out_dir);
-    }
-    if !check_sum(&md5sum_path, &out_dir) {
-        panic!("check sum of archive is incorrect");
+        if !check_sum(&md5sum_path, &out_dir) {
+            panic!("check sum of downloaded archive is incorrect");
+        }
     }
     expand(&archive_path, &out_dir);
 
