@@ -76,6 +76,7 @@ fn main() {
     if archive_path.exists() && check_sum(&md5sum_path, &out_dir) {
         println!("Use existings archive");
     } else {
+        println!("Downlaod archive");
         download(&uri, MKL_ARCHIVE, &out_dir);
         if !check_sum(&md5sum_path, &out_dir) {
             panic!("check sum of downloaded archive is incorrect");
