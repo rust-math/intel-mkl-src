@@ -66,7 +66,7 @@ fn main() {
 
     let oid = "4e492799a3ca2366653a59d946c0fee89b489fce";
     let uri = format!(
-        "https://raw.githubusercontent.com/termoshtt/rust-intel-mkl/{}/mkl_lib/{}",
+        "https://media.githubusercontent.com/media/termoshtt/rust-intel-mkl/{}/mkl_lib/{}",
         oid,
         MKL_ARCHIVE
     );
