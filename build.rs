@@ -64,7 +64,7 @@ fn main() {
     let crate_root = PathBuf::from(var("CARGO_MANIFEST_DIR").unwrap());
     let out_dir = PathBuf::from(var("OUT_DIR").unwrap());
 
-    let oid = "4e492799a3ca2366653a59d946c0fee89b489fce";
+    let oid = "293c05ed4b9bd7bdf61a22f9824dd71e7bbd48f9";
     let uri = format!(
         "https://media.githubusercontent.com/media/termoshtt/rust-intel-mkl/{}/mkl_lib/{}",
         oid,
