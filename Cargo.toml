@@ -13,3 +13,6 @@ build = "build.rs"
 links = "mkl_intel_lp64"
 
 exclude = ["mkl_lib/mkl.tar.xz"]
+
+[dev-dependencies]
+libc = "*"
