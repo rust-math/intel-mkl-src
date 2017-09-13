@@ -41,7 +41,12 @@ fn download(uri: &str, filename: &str, out_dir: &Path) {
 }
 
 fn check_sum(check_sum_path: &Path, dir: &Path) -> bool {
-    Command::new("md5sum")
+    let cmd = if cfg!(target_os = "linux") {
+        "md5sum"
+    } else {
+        "md5"
+    };
+    Command::new(cmd)
         .args(&["-c", check_sum_path.to_str().unwrap()])
         .current_dir(dir)
         .status()
