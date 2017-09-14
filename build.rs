@@ -34,14 +34,14 @@ use std::io::*;
 #[cfg(target_os = "linux")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
-    pub const MD5SUM: &'static str = "00c73b0625cac967961e3df255824676";
+    pub const MD5SUM: &'static str = "03aa6b3918da6046b1225aacd244363a";
     pub const URI: &'static str = "https://www.dropbox.com/s/nnlfdio0ka9yeo1/mkl_linux.tar.xz";
 }
 
 #[cfg(target_os = "macos")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
-    pub const MD5SUM: &'static str = "c44f4fda07fc01863cb06eaf7879bf71";
+    pub const MD5SUM: &'static str = "3774e0c8b4ebcb8639a4f293d749bd32";
     pub const URI: &'static str = "https://www.dropbox.com/s/fw74msh8udjdv28/mkl_osx.tar.xz";
 }
 
@@ -94,8 +94,8 @@ fn main() {
     expand(&archive_path, &out_dir);
 
     println!("cargo:rustc-link-search={}", out_dir.display());
-    println!("cargo:rustc-link-lib=dylib=mkl_intel_lp64");
-    println!("cargo:rustc-link-lib=dylib=mkl_gnu_thread");
-    println!("cargo:rustc-link-lib=dylib=mkl_core");
-    println!("cargo:rustc-link-lib=dylib=gomp");
+    println!("cargo:rustc-link-lib=mkl_intel_lp64");
+    println!("cargo:rustc-link-lib=mkl_intel_thread");
+    println!("cargo:rustc-link-lib=mkl_core");
+    println!("cargo:rustc-link-lib=iomp5");
 }
