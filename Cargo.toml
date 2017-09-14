@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-src"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 
 description = "Redistribution of Intel(R) MKL as a crate"
@@ -18,4 +18,4 @@ exclude = ["mkl_lib/mkl.tar.xz"]
 rust-crypto = "0.2"
 
 [dev-dependencies]
-libc = "*"
+libc = "0.2"
