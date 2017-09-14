@@ -6,7 +6,7 @@ authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 description = "Redistribution of Intel(R) MKL as a crate"
 repository = "https://github.com/termoshtt/rust-intel-mkl"
 keywords = ["fft", "blas", "lapack"]
-license-file = "mkl_lib/license.txt"
+license-file = "License.txt"
 readme = "README.md"
 
 build = "build.rs"
