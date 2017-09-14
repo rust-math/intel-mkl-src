@@ -20,40 +20,82 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::env;
+extern crate crypto;
+
+use crypto::md5;
+use crypto::digest::Digest;
+
+use std::env::var;
 use std::path::*;
 use std::process::Command;
 use std::fs;
 use std::io::*;
 
-const MKL_ARCHIVE: &'static str = "mkl.tar.xz";
+#[cfg(target_os = "linux")]
+mod mkl {
+    pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
+    pub const MD5SUM: &'static str = "03aa6b3918da6046b1225aacd244363a";
+    pub const URI: &'static str = "https://www.dropbox.com/s/nnlfdio0ka9yeo1/mkl_linux.tar.xz";
+}
+
+#[cfg(target_os = "macos")]
+mod mkl {
+    pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
+    pub const MD5SUM: &'static str = "3774e0c8b4ebcb8639a4f293d749bd32";
+    pub const URI: &'static str = "https://www.dropbox.com/s/fw74msh8udjdv28/mkl_osx.tar.xz";
+}
 
 fn download(uri: &str, filename: &str, out_dir: &Path) {
     let out = out_dir.join(filename);
     let mut f = BufWriter::new(fs::File::create(out).unwrap());
-    let p = Command::new("curl").arg(uri).output().expect(
+    let p = Command::new("curl").args(&["-L", uri]).output().expect(
         "Failed to start download",
     );
     f.write(&p.stdout).unwrap();
 }
 
-fn main() {
-    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let oid = "7e47b40340b88356058b4cff187ef7598c64658b";
-    let uri = format!(
-        "https://raw.githubusercontent.com/termoshtt/rust-intel-mkl/{}/mkl_lib/mkl.tar.xz",
-        oid
-    );
-    download(&uri, MKL_ARCHIVE, &out_dir);
-    Command::new("tar")
-        .args(&["Jxvf", MKL_ARCHIVE])
+fn calc_md5(path: &Path) -> String {
+    let mut sum = md5::Md5::new();
+    let mut f = BufReader::new(fs::File::open(path).unwrap());
+    let mut buf = Vec::new();
+    f.read_to_end(&mut buf).unwrap();
+    sum.input(&buf);
+    sum.result_str()
+}
+
+fn expand(archive: &Path, out_dir: &Path) {
+    let st = Command::new("tar")
+        .args(&["xvf", archive.to_str().unwrap()])
         .current_dir(&out_dir)
         .status()
-        .expect("Failed to start decompression (maybe 'tar' is missing?)");
+        .expect("Failed to start expanding archive");
+    if !st.success() {
+        panic!("Failed to expand archive");
+    }
+}
+
+fn main() {
+    let out_dir = PathBuf::from(var("OUT_DIR").unwrap());
+    let archive_path = out_dir.join(mkl::ARCHIVE);
+
+    if archive_path.exists() && calc_md5(&archive_path) == mkl::MD5SUM {
+        println!("Use existings archive");
+    } else {
+        println!("Downlaod archive");
+        download(mkl::URI, mkl::ARCHIVE, &out_dir);
+        let sum = calc_md5(&archive_path);
+        if sum != mkl::MD5SUM {
+            panic!(
+                "check sum of downloaded archive is incorrect: md5sum={}",
+                sum
+            );
+        }
+    }
+    expand(&archive_path, &out_dir);
 
     println!("cargo:rustc-link-search={}", out_dir.display());
-    println!("cargo:rustc-link-lib=dylib=mkl_intel_lp64");
-    println!("cargo:rustc-link-lib=dylib=mkl_gnu_thread");
-    println!("cargo:rustc-link-lib=dylib=mkl_core");
-    println!("cargo:rustc-link-lib=dylib=gomp");
+    println!("cargo:rustc-link-lib=mkl_intel_lp64");
+    println!("cargo:rustc-link-lib=mkl_intel_thread");
+    println!("cargo:rustc-link-lib=mkl_core");
+    println!("cargo:rustc-link-lib=iomp5");
 }
