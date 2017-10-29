@@ -98,4 +98,5 @@ fn main() {
     println!("cargo:rustc-link-lib=mkl_intel_thread");
     println!("cargo:rustc-link-lib=mkl_core");
     println!("cargo:rustc-link-lib=iomp5");
+    println!("cargo:rustc-link-lib=m");
 }
