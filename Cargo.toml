@@ -15,6 +15,7 @@ links = "mkl_intel_lp64"
 exclude = ["mkl_lib/mkl.tar.xz"]
 
 [build-dependencies]
+pkg-config = "0.3"
 rust-crypto = "0.2"
 
 [dev-dependencies]

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 extern crate crypto;
+extern crate pkg_config;
 
 use crypto::md5;
 use crypto::digest::Digest;
@@ -75,13 +76,18 @@ fn expand(archive: &Path, out_dir: &Path) {
 }
 
 fn main() {
+    if pkg_config::find_library("mkl-dynamic-lp64-iomp").is_ok() {
+        println!("Returning early, pre-installed Intel MKL was found.");
+        return;
+    }
+
     let out_dir = PathBuf::from(var("OUT_DIR").unwrap());
     let archive_path = out_dir.join(mkl::ARCHIVE);
 
     if archive_path.exists() && calc_md5(&archive_path) == mkl::MD5SUM {
         println!("Use existings archive");
     } else {
-        println!("Downlaod archive");
+        println!("Download archive");
         download(mkl::URI, mkl::ARCHIVE, &out_dir);
         let sum = calc_md5(&archive_path);
         if sum != mkl::MD5SUM {
