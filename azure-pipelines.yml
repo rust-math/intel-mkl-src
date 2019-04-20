@@ -16,7 +16,7 @@ jobs:
       pool:
         vmImage: 'macOS-10.14'
 
-  - job: 'pkg-config'
+  - job: 'pkg_config'
     pool:
       vmImage: 'ubuntu-16.04'
     container: rust-mkl
