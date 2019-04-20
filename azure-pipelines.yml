@@ -1,22 +1,12 @@
-
 jobs:
-  - job: Linux
-    pool:
-      vmImage: 'ubuntu-16.04'
-    strategy:
-      matrix:
-        stable:
-          rust_toolchain: stable
-        beta:
-          rust_toolchain: beta
-        nightly:
-          rust_toolchain: nightly
+  - template: ci/job.yml
+    parameters:
+      name: Linux
+      pool:
+        vmImage: 'ubuntu-16.04'
 
-    steps:
-      - script: |
-          curl -sSf https://sh.rustup.rs | sh -s -- --default-toolchain $RUST_TOOLCHAIN -y
-          echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
-        displayName: install rustup
-
-      - script: cargo test --verbose
-        displayName: run test
+  - template: ci/job.yml
+    parameters:
+      name: macOS
+      pool:
+        vmImage: 'macOS-10.14'
