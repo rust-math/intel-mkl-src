@@ -12,3 +12,4 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PKG_CONFIG_PATH /opt/intel/compilers_and_libraries/linux/mkl/bin/pkgconfig
+WORKDIR /src
