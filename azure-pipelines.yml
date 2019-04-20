@@ -1,3 +1,8 @@
+resources:
+  containers:
+    - container: rust-mkl
+      image: rustmath/mkl:latest
+
 jobs:
   - template: ci/job.yml
     parameters:
@@ -10,3 +15,10 @@ jobs:
       name: macOS
       pool:
         vmImage: 'macOS-10.14'
+
+  - job: 'Linux/pkg-config'
+    pool:
+      vmImage: 'ubuntu-16.04'
+    container: rust-mkl
+    steps:
+      - script: cargo test --verbose
