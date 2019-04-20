@@ -1,0 +1,12 @@
+jobs:
+  - template: ci/job.yml
+    parameters:
+      name: Linux
+      pool:
+        vmImage: 'ubuntu-16.04'
+
+  - template: ci/job.yml
+    parameters:
+      name: macOS
+      pool:
+        vmImage: 'macOS-10.14'
