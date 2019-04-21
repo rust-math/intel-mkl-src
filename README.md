@@ -4,6 +4,22 @@
 
 Redistribution of Intel MKL as a crate. Tested on Linux and macOS.
 
+## Usage
+
+This crate is a `*-src` crate. This downloads and link Intel MKL, but does not introduce any symbols.
+Please use `blas-sys`, `lapack-sys`, or `fftw-sys` to use BLAS, LAPACK, FFTW interface of MKL, e.g.
+
+```toml
+[dependencies]
+fftw-sys = { version = "0.4", features = ["intel-mkl"] }
+```
+
+## pkg-config
+
+This crate does not download archive if `pkg-config` finds MKL shared library installed by other way.
+Be sure to set `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` correctly.
+For debian and ubuntu users, [ci/Dockerfile](ci/Dockerfile) may be helpful.
+
 ## License
 MKL is distributed under the Intel Simplified Software License for Intel(R) Math Kernel Library, See [License.txt](License.txt).
 Some wrapper codes are licensed by MIT License (see the header of each file).
