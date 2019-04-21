@@ -22,14 +22,14 @@
 
 extern crate crypto;
 
-use crypto::md5;
 use crypto::digest::Digest;
+use crypto::md5;
 
 use std::env::var;
-use std::path::*;
-use std::process::Command;
 use std::fs;
 use std::io::*;
+use std::path::*;
+use std::process::Command;
 
 #[cfg(target_os = "linux")]
 mod mkl {
@@ -48,9 +48,10 @@ mod mkl {
 fn download(uri: &str, filename: &str, out_dir: &Path) {
     let out = out_dir.join(filename);
     let mut f = BufWriter::new(fs::File::create(out).unwrap());
-    let p = Command::new("curl").args(&["-L", uri]).output().expect(
-        "Failed to start download",
-    );
+    let p = Command::new("curl")
+        .args(&["-L", uri])
+        .output()
+        .expect("Failed to start download");
     f.write(&p.stdout).unwrap();
 }
 
