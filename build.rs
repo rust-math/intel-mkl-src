@@ -20,90 +20,75 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-extern crate crypto;
+extern crate failure;
 extern crate pkg_config;
+extern crate reqwest;
+extern crate tar;
+extern crate xz2;
 
-use crypto::digest::Digest;
-use crypto::md5;
+use failure::*;
+use std::{env, fs, io, path::*};
 
-use std::env::var;
-use std::fs;
-use std::io::*;
-use std::path::*;
-use std::process::Command;
+const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 
 #[cfg(target_os = "linux")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
-    pub const MD5SUM: &'static str = "03aa6b3918da6046b1225aacd244363a";
-    pub const URI: &'static str = "https://www.dropbox.com/s/nnlfdio0ka9yeo1/mkl_linux.tar.xz";
+    pub const EXT: &'static str = "so";
+    pub const PREFIX: &'static str = "lib";
 }
 
 #[cfg(target_os = "macos")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
-    pub const MD5SUM: &'static str = "3774e0c8b4ebcb8639a4f293d749bd32";
-    pub const URI: &'static str = "https://www.dropbox.com/s/fw74msh8udjdv28/mkl_osx.tar.xz";
+    pub const EXT: &'static str = "dylib";
+    pub const PREFIX: &'static str = "lib";
 }
 
-fn download(uri: &str, filename: &str, out_dir: &Path) {
-    let out = out_dir.join(filename);
-    let mut f = BufWriter::new(fs::File::create(out).unwrap());
-    let p = Command::new("curl")
-        .args(&["-L", uri])
-        .output()
-        .expect("Failed to start download");
-    f.write(&p.stdout).unwrap();
+#[cfg(target_os = "windows")]
+mod mkl {
+    pub const ARCHIVE: &'static str = "mkl_windows64.tar.xz";
+    pub const EXT: &'static str = "lib";
+    pub const PREFIX: &'static str = "";
 }
 
-fn calc_md5(path: &Path) -> String {
-    let mut sum = md5::Md5::new();
-    let mut f = BufReader::new(fs::File::open(path).unwrap());
-    let mut buf = Vec::new();
-    f.read_to_end(&mut buf).unwrap();
-    sum.input(&buf);
-    sum.result_str()
-}
-
-fn expand(archive: &Path, out_dir: &Path) {
-    let st = Command::new("tar")
-        .args(&["xvf", archive.to_str().unwrap()])
-        .current_dir(&out_dir)
-        .status()
-        .expect("Failed to start expanding archive");
-    if !st.success() {
-        panic!("Failed to expand archive");
-    }
-}
-
-fn main() {
+fn main() -> Fallible<()> {
     if pkg_config::find_library("mkl-dynamic-lp64-iomp").is_ok() {
-        println!("Returning early, pre-installed Intel MKL was found.");
-        return;
+        eprintln!("Returning early, pre-installed Intel mkl was found.");
+        return Ok(());
     }
 
-    let out_dir = PathBuf::from(var("OUT_DIR").unwrap());
-    let archive_path = out_dir.join(mkl::ARCHIVE);
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
-    if archive_path.exists() && calc_md5(&archive_path) == mkl::MD5SUM {
-        println!("Use existings archive");
-    } else {
-        println!("Download archive");
-        download(mkl::URI, mkl::ARCHIVE, &out_dir);
-        let sum = calc_md5(&archive_path);
-        if sum != mkl::MD5SUM {
-            panic!(
-                "check sum of downloaded archive is incorrect: md5sum={}",
-                sum
-            );
+    let archive = out_dir.join(mkl::ARCHIVE);
+    if !archive.exists() {
+        eprintln!("Download archive from AWS S3: {}/{}", S3_ADDR, mkl::ARCHIVE);
+        let mut res = reqwest::get(&format!("{}/{}", S3_ADDR, mkl::ARCHIVE))?;
+        if !res.status().is_success() {
+            bail!("HTTP access failed: {}", res.status());
         }
+        let f = fs::File::create(&archive)?;
+        let mut buf = io::BufWriter::new(f);
+        res.copy_to(&mut buf)?;
+        assert!(archive.exists());
+    } else {
+        eprintln!("Use existing archive");
     }
-    expand(&archive_path, &out_dir);
+
+    let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
+    if !core.exists() {
+        let f = fs::File::open(&archive)?;
+        let de = xz2::read::XzDecoder::new(f);
+        let mut arc = tar::Archive::new(de);
+        arc.unpack(&out_dir)?;
+        assert!(core.exists());
+    } else {
+        eprintln!("Archive has already been extracted");
+    }
 
     println!("cargo:rustc-link-search={}", out_dir.display());
     println!("cargo:rustc-link-lib=mkl_intel_lp64");
-    println!("cargo:rustc-link-lib=mkl_intel_thread");
+    println!("cargo:rustc-link-lib=mkl_sequential");
     println!("cargo:rustc-link-lib=mkl_core");
-    println!("cargo:rustc-link-lib=iomp5");
-    println!("cargo:rustc-link-lib=m");
+    Ok(())
 }
