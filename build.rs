@@ -36,19 +36,22 @@ const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-inte
 #[cfg(target_os = "linux")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
-    pub const CORE: &'static str = "libmkl_core.so";
+    pub const EXT: &'static str = "so";
+    pub const PREFIX: &'static str = "lib";
 }
 
 #[cfg(target_os = "macos")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
-    pub const CORE: &'static str = "libmkl_core.dylib";
+    pub const EXT: &'static str = "dylib";
+    pub const PREFIX: &'static str = "lib";
 }
 
 #[cfg(target_os = "windows")]
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_windows64.tar.xz";
-    pub const CORE: &'static str = "mkl_core.lib";
+    pub const EXT: &'static str = "lib";
+    pub const PREFIX: &'static str = "";
 }
 
 fn main() -> Fallible<()> {
@@ -74,7 +77,7 @@ fn main() -> Fallible<()> {
         eprintln!("Use existing archive");
     }
 
-    let core = out_dir.join(mkl::CORE);
+    let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
     if !core.exists() {
         let f = fs::File::open(&archive)?;
         let de = xz2::read::XzDecoder::new(f);
@@ -86,9 +89,9 @@ fn main() -> Fallible<()> {
     }
 
     println!("cargo:rustc-link-search={}", out_dir.display());
-    for lib in glob(&format!("{}/*.lib", out_dir.display())).unwrap() {
+    for lib in glob(&format!("{}/*.{}", out_dir.display(), mkl::EXT)).unwrap() {
         let lib = lib.unwrap();
-        let name = lib.file_stem().unwrap().to_str().unwrap();
+        let name = lib.file_stem().unwrap().to_str().unwrap().trim_start_matches(mkl::PREFIX);
         println!("cargo:rustc-link-lib={}", name);
     }
     Ok(())
