@@ -21,14 +21,14 @@
 // SOFTWARE.
 
 extern crate failure;
+extern crate glob;
 extern crate pkg_config;
 extern crate reqwest;
 extern crate tar;
 extern crate xz2;
-extern crate glob;
 
-use glob::glob;
 use failure::*;
+use glob::glob;
 use std::{env, fs, io, path::*};
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
@@ -89,10 +89,9 @@ fn main() -> Fallible<()> {
     }
 
     println!("cargo:rustc-link-search={}", out_dir.display());
-    for lib in glob(&format!("{}/*.{}", out_dir.display(), mkl::EXT)).unwrap() {
-        let lib = lib.unwrap();
-        let name = lib.file_stem().unwrap().to_str().unwrap().trim_start_matches(mkl::PREFIX);
-        println!("cargo:rustc-link-lib={}", name);
-    }
+    println!("cargo:rustc-link-lib=mkl_intel_lp64");
+    println!("cargo:rustc-link-lib=mkl_intel_thread");
+    println!("cargo:rustc-link-lib=mkl_core");
+    println!("cargo:rustc-link-lib=iomp5");
     Ok(())
 }
