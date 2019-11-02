@@ -20,8 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use curl::easy::Easy;
 use failure::*;
-use std::{env, fs, io, path::*};
+use std::{
+    env, fs,
+    io::{self, Write},
+    path::*,
+};
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 
@@ -57,13 +62,12 @@ fn main() -> Fallible<()> {
     let archive = out_dir.join(mkl::ARCHIVE);
     if !archive.exists() {
         eprintln!("Download archive from AWS S3: {}/{}", S3_ADDR, mkl::ARCHIVE);
-        let mut res = reqwest::get(&format!("{}/{}", S3_ADDR, mkl::ARCHIVE))?;
-        if !res.status().is_success() {
-            bail!("HTTP access failed: {}", res.status());
-        }
         let f = fs::File::create(&archive)?;
         let mut buf = io::BufWriter::new(f);
-        res.copy_to(&mut buf)?;
+        let mut easy = Easy::new();
+        easy.url(&format!("{}/{}", S3_ADDR, mkl::ARCHIVE))?;
+        easy.write_function(move |data| Ok(buf.write(data).unwrap()))?;
+        easy.perform()?;
         assert!(archive.exists());
     } else {
         eprintln!("Use existing archive");
