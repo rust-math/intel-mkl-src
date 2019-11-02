@@ -18,9 +18,9 @@ exclude = ["mkl_lib/mkl.tar.xz"]
 [build-dependencies]
 pkg-config = "0.3"
 failure = "0.1"
-reqwest = "0.9" 
 xz2 = "0.1"
 tar = "0.4"
+curl = "0.4"
 
 [dev-dependencies]
 libc = "0.2"
