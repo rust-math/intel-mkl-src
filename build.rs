@@ -20,12 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-extern crate failure;
-extern crate pkg_config;
-extern crate reqwest;
-extern crate tar;
-extern crate xz2;
-
 use failure::*;
 use std::{env, fs, io, path::*};
 
