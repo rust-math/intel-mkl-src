@@ -12,6 +12,14 @@ jobs:
       - script: cargo test -v
         displayName: run test
 
+  - job: 'packaging'
+    pool:
+      vmImage: 'ubuntu-16.04'
+    container: rust-mkl
+    steps:
+      - script: ./package/mkl_linux.sh
+        displayName: Package MKL libraries
+
   - job: Linux
     pool:
       vmImage: 'ubuntu-16.04'
