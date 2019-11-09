@@ -3,6 +3,7 @@ set -eux
 
 if [ ! -d ${MKL_DIR:=/opt/intel/mkl} ]; then
   echo >&2 "MKL_DIR=${MKL_DIR} does not exists"
+  exit 1
 fi
 
 # Get Intel MKL build version from mkl_version.h header file
