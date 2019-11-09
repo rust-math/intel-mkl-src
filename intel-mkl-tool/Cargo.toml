@@ -4,6 +4,14 @@ version = "0.1.0"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+curl = "0.4.25"
+failure = "0.1.6"
+pkg-config = "0.3.17"
+tar = "0.4.26"
+xz2 = "0.1.6"
+log = "0.4.8"
+
+# CLI
+structopt = "0.3.4"
+env_logger = "0.7.1"
