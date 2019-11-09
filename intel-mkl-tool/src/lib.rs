@@ -30,7 +30,24 @@ mod mkl {
     pub const PREFIX: &'static str = "";
 }
 
+pub fn home_library_path() -> PathBuf {
+    dirs::data_local_dir().unwrap().join("intel-mkl-tool")
+}
+
+/// Seek MKL library from pkg-config
+pub fn seek_pkg_config() -> Fallible<pkg_config::Library> {
+    Ok(pkg_config::probe_library("mkl-dynamic-lp64-iomp")?)
+}
+
 pub fn download(out_dir: &Path) -> Fallible<()> {
+    if !out_dir.exists() {
+        info!("Create output directory: {}", out_dir.display());
+        fs::create_dir_all(out_dir)?;
+    }
+    if !out_dir.is_dir() {
+        bail!("Not a directory: {}", out_dir.display());
+    }
+
     let archive = out_dir.join(mkl::ARCHIVE);
     if !archive.exists() {
         info!("Download archive from AWS S3: {}/{}", S3_ADDR, mkl::ARCHIVE);
@@ -42,7 +59,7 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
         easy.perform()?;
         assert!(archive.exists());
     } else {
-        info!("Use existing archive");
+        info!("Use existing archive: {}", archive.display());
     }
 
     let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));

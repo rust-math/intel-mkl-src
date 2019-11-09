@@ -15,3 +15,4 @@ log = "0.4.8"
 # CLI
 structopt = "0.3.4"
 env_logger = "0.7.1"
+dirs = "*"

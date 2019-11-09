@@ -5,8 +5,8 @@ use structopt::StructOpt;
 /// CLI tool for intel-mkl crate
 #[derive(Debug, StructOpt)]
 enum Opt {
-    Download { path: PathBuf },
-    PkgConfig {},
+    Download { path: Option<PathBuf> },
+    Seek {},
 }
 
 fn main() -> Fallible<()> {
@@ -17,11 +17,17 @@ fn main() -> Fallible<()> {
 
     match opt {
         Opt::Download { path } => {
+            let path = if let Some(path) = path {
+                path
+            } else {
+                let data_dir = dirs::data_local_dir().unwrap();
+                data_dir.join("intel-mkl-tool")
+            };
             intel_mkl_tool::download(&path)?;
-            println!("{:?}", path);
         }
-        Opt::PkgConfig {} => {
-            unimplemented!();
+        Opt::Seek {} => {
+            let paths = intel_mkl_tool::seek_pkg_config()?;
+            println!("{:?}", paths);
         }
     }
     Ok(())
