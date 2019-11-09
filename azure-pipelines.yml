@@ -19,8 +19,8 @@ jobs:
     steps:
       - script: ./package/mkl_linux.sh
         displayName: Package MKL libraries
-        variables:
-          MKL_DIR: /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
+    variables:
+      MKL_DIR: /opt/intel/compilers_and_libraries_2019.3.199/linux/mkl
 
   - job: Linux
     pool:
