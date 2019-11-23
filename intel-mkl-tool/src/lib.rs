@@ -34,20 +34,17 @@ pub fn home_library_path() -> PathBuf {
     dirs::data_local_dir().unwrap().join("intel-mkl-tool")
 }
 
-/// Seek MKL library from
-///
-/// 1. pkg-config
-/// 2. `$XDG_DATA_HOME/intel-mkl-tool`
-///
-/// returns `None` if not found.
-///
-pub fn seek() -> Option<PathBuf> {
+pub fn seek_pkg_config() -> Option<PathBuf> {
     if let Ok(lib) = pkg_config::probe_library("mkl-dynamic-lp64-iomp") {
         if lib.libs.len() > 1 {
             warn!("Found {} MKL libraries. Use first found.", lib.libs.len())
         }
         return Some(PathBuf::from(lib.libs[0].clone()));
     }
+    None
+}
+
+pub fn seek_home() -> Option<PathBuf> {
     let home_lib = home_library_path();
     if home_lib.is_dir() {
         return Some(home_lib);

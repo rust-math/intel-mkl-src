@@ -34,8 +34,15 @@ fn main() -> Fallible<()> {
             intel_mkl_tool::download(&path)?;
         }
         Opt::Seek {} => {
-            let paths = intel_mkl_tool::seek().ok_or(err_msg("MKL not found"))?;
-            println!("{}", paths.display());
+            if let Some(path) = intel_mkl_tool::seek_pkg_config() {
+                println!("{}", path.display());
+                return Ok(());
+            }
+            if let Some(path) = intel_mkl_tool::seek_home() {
+                println!("{}", path.display());
+                return Ok(());
+            }
+            bail!("Intel-MKL not found.");
         }
     }
     Ok(())
