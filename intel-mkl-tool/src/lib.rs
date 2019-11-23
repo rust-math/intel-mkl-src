@@ -34,9 +34,25 @@ pub fn home_library_path() -> PathBuf {
     dirs::data_local_dir().unwrap().join("intel-mkl-tool")
 }
 
-/// Seek MKL library from pkg-config
-pub fn seek_pkg_config() -> Fallible<pkg_config::Library> {
-    Ok(pkg_config::probe_library("mkl-dynamic-lp64-iomp")?)
+/// Seek MKL library from
+///
+/// 1. pkg-config
+/// 2. `$XDG_DATA_HOME/intel-mkl-tool`
+///
+/// returns `None` if not found.
+///
+pub fn seek() -> Option<PathBuf> {
+    if let Ok(lib) = pkg_config::probe_library("mkl-dynamic-lp64-iomp") {
+        if lib.libs.len() > 1 {
+            warn!("Found {} MKL libraries. Use first found.", lib.libs.len())
+        }
+        return Some(PathBuf::from(lib.libs[0].clone()));
+    }
+    let home_lib = home_library_path();
+    if home_lib.is_dir() {
+        return Some(home_lib);
+    }
+    None
 }
 
 pub fn download(out_dir: &Path) -> Fallible<()> {
@@ -59,7 +75,7 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
         easy.perform()?;
         assert!(archive.exists());
     } else {
-        info!("Use existing archive: {}", archive.display());
+        info!("Archive already exists: {}", archive.display());
     }
 
     let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
