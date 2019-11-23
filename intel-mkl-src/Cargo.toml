@@ -15,12 +15,16 @@ links = "mkl_intel_lp64"
 
 exclude = ["mkl_lib/mkl.tar.xz"]
 
+[features]
+default = []
+use-shared = []
+
 [build-dependencies]
-pkg-config = "0.3.16"
-failure = "0.1.6"
-xz2 = "0.1.6"
-tar = "0.4.26"
-curl = "0.4.25"
+failure = "0.1"
+
+[build-dependencies.intel-mkl-tool]
+version = "0.1.0"
+path = "../intel-mkl-tool"
 
 [dev-dependencies]
 libc = "0.2.65"

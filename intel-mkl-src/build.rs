@@ -20,70 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use curl::easy::Easy;
 use failure::*;
-use std::{
-    env, fs,
-    io::{self, Write},
-    path::*,
-};
-
-const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
-
-#[cfg(target_os = "linux")]
-mod mkl {
-    pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
-    pub const EXT: &'static str = "so";
-    pub const PREFIX: &'static str = "lib";
-}
-
-#[cfg(target_os = "macos")]
-mod mkl {
-    pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
-    pub const EXT: &'static str = "dylib";
-    pub const PREFIX: &'static str = "lib";
-}
-
-#[cfg(target_os = "windows")]
-mod mkl {
-    pub const ARCHIVE: &'static str = "mkl_windows64.tar.xz";
-    pub const EXT: &'static str = "lib";
-    pub const PREFIX: &'static str = "";
-}
+use std::{env, path::*};
 
 fn main() -> Fallible<()> {
-    if pkg_config::find_library("mkl-dynamic-lp64-iomp").is_ok() {
-        eprintln!("Returning early, pre-installed Intel mkl was found.");
-        return Ok(());
-    }
-
-    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-
-    let archive = out_dir.join(mkl::ARCHIVE);
-    if !archive.exists() {
-        eprintln!("Download archive from AWS S3: {}/{}", S3_ADDR, mkl::ARCHIVE);
-        let f = fs::File::create(&archive)?;
-        let mut buf = io::BufWriter::new(f);
-        let mut easy = Easy::new();
-        easy.url(&format!("{}/{}", S3_ADDR, mkl::ARCHIVE))?;
-        easy.write_function(move |data| Ok(buf.write(data).unwrap()))?;
-        easy.perform()?;
-        assert!(archive.exists());
+    let out_dir = if let Some(path) = intel_mkl_tool::seek_pkg_config() {
+        path
     } else {
-        eprintln!("Use existing archive");
-    }
+        let out_dir = if cfg!(feature = "use-shared") {
+            intel_mkl_tool::home_library_path()
+        } else {
+            PathBuf::from(env::var("OUT_DIR").unwrap())
+        };
 
-    let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
-    if !core.exists() {
-        let f = fs::File::open(&archive)?;
-        let de = xz2::read::XzDecoder::new(f);
-        let mut arc = tar::Archive::new(de);
-        arc.unpack(&out_dir)?;
-        assert!(core.exists());
-    } else {
-        eprintln!("Archive has already been extracted");
-    }
-
+        intel_mkl_tool::download(&out_dir)?;
+        out_dir
+    };
     println!("cargo:rustc-link-search={}", out_dir.display());
     println!("cargo:rustc-link-lib=mkl_intel_lp64");
     println!("cargo:rustc-link-lib=mkl_sequential");
