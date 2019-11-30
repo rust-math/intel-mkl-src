@@ -1,5 +1,6 @@
 use curl::easy::Easy;
 use failure::*;
+use glob::glob;
 use log::*;
 use std::{
     fs,
@@ -88,6 +89,7 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
     Ok(())
 }
 
+// Read mkl_version.h to get MKL version (e.g. 2019.5)
 fn get_mkl_version(version_header: &Path) -> Fallible<(u32, u32)> {
     if !version_header.exists() {
         bail!("MKL Version file not found: {}", version_header.display());
@@ -120,7 +122,21 @@ pub fn package(mkl_path: &Path) -> Fallible<PathBuf> {
         bail!("MKL directory not found: {}", mkl_path.display());
     }
     let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
-    dbg!(year);
-    dbg!(update);
-    unimplemented!()
+    let shared_libs: Vec<_> = glob(mkl_path.join("lib/intel64/*.so").to_str().unwrap())?
+        .map(|path| path.unwrap())
+        .collect();
+    let out = PathBuf::from(format!("mkl_linux64_{}_{}.tar.zst", year, update));
+    let f = fs::File::create(&out)?;
+    let buf = io::BufWriter::new(f);
+    let zstd = zstd::stream::write::Encoder::new(buf, 6)?;
+    let mut ar = tar::Builder::new(zstd);
+    ar.mode(tar::HeaderMode::Deterministic);
+    for lib in &shared_libs {
+        info!("Add {}", lib.display());
+        ar.append_path_with_name(lib, lib.file_name().unwrap())?;
+    }
+    let zstd = ar.into_inner()?;
+    zstd.finish()?;
+
+    Ok(out)
 }

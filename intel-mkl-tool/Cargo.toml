@@ -16,6 +16,8 @@ tar = "0.4.26"
 xz2 = "0.1.6"
 log = "0.4.8"
 dirs = "*"
+glob = "*"
+zstd = "*"
 
 # CLI
 structopt  = { version = "0.3.4", optional = true }
