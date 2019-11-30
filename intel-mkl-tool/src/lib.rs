@@ -122,12 +122,28 @@ pub fn package(mkl_path: &Path) -> Fallible<PathBuf> {
         bail!("MKL directory not found: {}", mkl_path.display());
     }
     let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
-    let out = PathBuf::from(format!("mkl_linux64_{}_{}.tar.zst", year, update));
     info!("Intel MKL version: {}.{}", year, update);
-    info!("Create archive for Linux/64bit systems: {}", out.display());
-    let shared_libs: Vec<_> = glob(mkl_path.join("lib/intel64/*.so").to_str().unwrap())?
-        .map(|path| path.unwrap())
-        .collect();
+    let out = if cfg!(target_os = "Linux") {
+        let out = PathBuf::from(format!("mkl_linux64_{}_{}.tar.zst", year, update));
+        info!("Create archive for Linux/64bit systems: {}", out.display());
+        out
+    } else {
+        let out = PathBuf::from(format!("mkl_windows64_{}_{}.tar.zst", year, update));
+        info!(
+            "Create archive for Windows/64bit systems: {}",
+            out.display()
+        );
+        out
+    };
+
+    let shared_libs: Vec<_> = glob(
+        mkl_path
+            .join(format!("lib/intel64/*.{}", mkl::EXT))
+            .to_str()
+            .unwrap(),
+    )?
+    .map(|path| path.unwrap())
+    .collect();
     let f = fs::File::create(&out)?;
     let buf = io::BufWriter::new(f);
     let zstd = zstd::stream::write::Encoder::new(buf, 6)?;
