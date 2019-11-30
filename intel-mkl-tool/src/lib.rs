@@ -3,7 +3,7 @@ use failure::*;
 use log::*;
 use std::{
     fs,
-    io::{self, Write},
+    io::{self, BufRead, Write},
     path::*,
 };
 
@@ -86,4 +86,41 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
         info!("Archive has already been extracted");
     }
     Ok(())
+}
+
+fn get_mkl_version(version_header: &Path) -> Fallible<(u32, u32)> {
+    if !version_header.exists() {
+        bail!("MKL Version file not found: {}", version_header.display());
+    }
+    let f = fs::File::open(version_header)?;
+    let f = io::BufReader::new(f);
+    let mut year = 0;
+    let mut update = 0;
+    for line in f.lines() {
+        if let Ok(line) = line {
+            if !line.starts_with("#define") {
+                continue;
+            }
+            let ss: Vec<&str> = line.split(" ").collect();
+            match ss[1] {
+                "__INTEL_MKL__" => year = ss[2].parse()?,
+                "__INTEL_MKL_UPDATE__" => update = ss[2].parse()?,
+                _ => continue,
+            }
+        }
+    }
+    if year == 0 || update == 0 {
+        bail!("Cannot determine MKL versions");
+    }
+    Ok((year, update))
+}
+
+pub fn package(mkl_path: &Path) -> Fallible<PathBuf> {
+    if !mkl_path.exists() {
+        bail!("MKL directory not found: {}", mkl_path.display());
+    }
+    let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
+    dbg!(year);
+    dbg!(update);
+    unimplemented!()
 }
