@@ -12,6 +12,7 @@ const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-inte
 
 #[cfg(target_os = "linux")]
 mod mkl {
+    pub const ARCHIVE_NAME: &'static str = "mkl_linux64";
     pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
     pub const EXT: &'static str = "so";
     pub const PREFIX: &'static str = "lib";
@@ -26,6 +27,7 @@ mod mkl {
 
 #[cfg(target_os = "windows")]
 mod mkl {
+    pub const ARCHIVE_NAME: &'static str = "mkl_windows64";
     pub const ARCHIVE: &'static str = "mkl_windows64.tar.xz";
     pub const EXT: &'static str = "lib";
     pub const PREFIX: &'static str = "";
@@ -123,18 +125,8 @@ pub fn package(mkl_path: &Path) -> Fallible<PathBuf> {
     }
     let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
     info!("Intel MKL version: {}.{}", year, update);
-    let out = if cfg!(target_os = "Linux") {
-        let out = PathBuf::from(format!("mkl_linux64_{}_{}.tar.zst", year, update));
-        info!("Create archive for Linux/64bit systems: {}", out.display());
-        out
-    } else {
-        let out = PathBuf::from(format!("mkl_windows64_{}_{}.tar.zst", year, update));
-        info!(
-            "Create archive for Windows/64bit systems: {}",
-            out.display()
-        );
-        out
-    };
+    let out = PathBuf::from(format!("{}_{}_{}.tar.zst", mkl::ARCHIVE_NAME, year, update));
+    info!("Create archive: {}", out.display());
 
     let shared_libs: Vec<_> = glob(
         mkl_path
