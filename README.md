@@ -21,6 +21,12 @@ Be sure to set `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` correctly.
 For debian and ubuntu users, [ci/Dockerfile](ci/Dockerfile) may be helpful.
 Windows is not supported yet.
 
+## `use-shared` feature
+
+(Optional, Experimental) This feature uses `$XDG_DATA_HOME/intel-mkl-tool` directory for downloading Intel-MKL.
+You can share this directory among several projects using `intel-mkl-src` crate.
+This will reduce disk occupancy and downloading time.
+
 ## License
 MKL is distributed under the Intel Simplified Software License for Intel(R) Math Kernel Library, See [License.txt](License.txt).
 Some wrapper codes are licensed by MIT License (see the header of each file).
