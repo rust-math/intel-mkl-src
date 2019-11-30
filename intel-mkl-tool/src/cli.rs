@@ -51,8 +51,7 @@ fn main() -> Fallible<()> {
         }
 
         Opt::Package { path } => {
-            let out = intel_mkl_tool::package(&path)?;
-            println!("{}", out.display());
+            let _out = intel_mkl_tool::package(&path)?;
         }
     }
     Ok(())
