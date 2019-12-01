@@ -10,28 +10,40 @@ use std::{
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod mkl {
-    pub const ARCHIVE_NAME: &'static str = "mkl_linux64";
-    pub const ARCHIVE: &'static str = "mkl_linux.tar.xz";
+    pub const ARCHIVE: &'static str = "mkl_linux64";
     pub const EXT: &'static str = "so";
     pub const PREFIX: &'static str = "lib";
+    pub const VERSION_YEAR: u32 = 2019;
+    pub const VERSION_UPDATE: u32 = 5;
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", target_arch = "x86_64"))]
 mod mkl {
-    pub const ARCHIVE_NAME: &'static str = "mkl_osx";
-    pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
+    pub const ARCHIVE: &'static str = "mkl_macos64";
     pub const EXT: &'static str = "dylib";
     pub const PREFIX: &'static str = "lib";
+    pub const VERSION_YEAR: u32 = 2019;
+    pub const VERSION_UPDATE: u32 = 3;
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 mod mkl {
-    pub const ARCHIVE_NAME: &'static str = "mkl_windows64";
-    pub const ARCHIVE: &'static str = "mkl_windows64.tar.xz";
+    pub const ARCHIVE: &'static str = "mkl_windows64";
     pub const EXT: &'static str = "lib";
     pub const PREFIX: &'static str = "";
+    pub const VERSION_YEAR: u32 = 2019;
+    pub const VERSION_UPDATE: u32 = 5;
+}
+
+pub fn archive_filename() -> String {
+    format!(
+        "{}_{}_{}.tar.zst",
+        mkl::ARCHIVE,
+        mkl::VERSION_YEAR,
+        mkl::VERSION_UPDATE
+    )
 }
 
 pub fn home_library_path() -> PathBuf {
@@ -65,13 +77,14 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
         bail!("Not a directory: {}", out_dir.display());
     }
 
-    let archive = out_dir.join(mkl::ARCHIVE);
+    let archive = out_dir.join(archive_filename());
     if !archive.exists() {
-        info!("Download archive from AWS S3: {}/{}", S3_ADDR, mkl::ARCHIVE);
+        let url = format!("{}/{}", S3_ADDR, archive_filename());
+        info!("Download archive from AWS S3: {}", url);
         let f = fs::File::create(&archive)?;
         let mut buf = io::BufWriter::new(f);
         let mut easy = Easy::new();
-        easy.url(&format!("{}/{}", S3_ADDR, mkl::ARCHIVE))?;
+        easy.url(&url)?;
         easy.write_function(move |data| Ok(buf.write(data).unwrap()))?;
         easy.perform()?;
         assert!(archive.exists());
@@ -82,7 +95,7 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
     let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
     if !core.exists() {
         let f = fs::File::open(&archive)?;
-        let de = xz2::read::XzDecoder::new(f);
+        let de = zstd::stream::read::Decoder::new(f)?;
         let mut arc = tar::Archive::new(de);
         arc.unpack(&out_dir)?;
         assert!(core.exists());
@@ -126,7 +139,7 @@ pub fn package(mkl_path: &Path) -> Fallible<PathBuf> {
     }
     let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
     info!("Intel MKL version: {}.{}", year, update);
-    let out = PathBuf::from(format!("{}_{}_{}.tar.zst", mkl::ARCHIVE_NAME, year, update));
+    let out = PathBuf::from(archive_filename());
     info!("Create archive: {}", out.display());
 
     let shared_libs: Vec<_> = glob(
