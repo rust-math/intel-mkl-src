@@ -20,25 +20,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use failure::*;
 use std::{env, path::*};
 
-fn main() -> Fallible<()> {
+fn main() {
     let out_dir = if let Some(path) = intel_mkl_tool::seek_pkg_config() {
         path
     } else {
         let out_dir = if cfg!(feature = "use-shared") {
             intel_mkl_tool::home_library_path()
         } else {
-            PathBuf::from(env::var("OUT_DIR").unwrap())
+            PathBuf::from(env::var("OUT_DIR").expect("Failed to get OUT_DIR"))
         };
 
-        intel_mkl_tool::download(&out_dir)?;
+        intel_mkl_tool::download(&out_dir).expect("Failed to downalod Intel-MKL archive");
         out_dir
     };
     println!("cargo:rustc-link-search={}", out_dir.display());
     println!("cargo:rustc-link-lib=mkl_intel_lp64");
     println!("cargo:rustc-link-lib=mkl_sequential");
     println!("cargo:rustc-link-lib=mkl_core");
-    Ok(())
 }
