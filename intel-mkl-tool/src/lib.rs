@@ -47,7 +47,11 @@ pub fn archive_filename() -> String {
 }
 
 pub fn home_library_path() -> PathBuf {
-    dirs::data_local_dir().unwrap().join("intel-mkl-tool")
+    dirs::data_local_dir().unwrap().join(format!(
+        "intel-mkl/{}.{}",
+        mkl::VERSION_YEAR,
+        mkl::VERSION_UPDATE
+    ))
 }
 
 pub fn seek_pkg_config() -> Option<PathBuf> {
