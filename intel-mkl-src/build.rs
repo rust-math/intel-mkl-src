@@ -26,10 +26,10 @@ fn main() {
     let out_dir = if let Some(path) = intel_mkl_tool::seek_pkg_config() {
         path
     } else {
-        let out_dir = if cfg!(feature = "use-shared") {
-            intel_mkl_tool::home_library_path()
-        } else {
+        let out_dir = if cfg!(feature = "use-outdir") {
             PathBuf::from(env::var("OUT_DIR").expect("Cannot get OUT_DIR env variable"))
+        } else {
+            intel_mkl_tool::home_library_path()
         };
 
         intel_mkl_tool::download(&out_dir).expect("Failed to dowload MKL archive");
