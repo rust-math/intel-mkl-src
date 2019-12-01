@@ -20,6 +20,7 @@ mod mkl {
 
 #[cfg(target_os = "macos")]
 mod mkl {
+    pub const ARCHIVE_NAME: &'static str = "mkl_osx";
     pub const ARCHIVE: &'static str = "mkl_osx.tar.xz";
     pub const EXT: &'static str = "dylib";
     pub const PREFIX: &'static str = "lib";
