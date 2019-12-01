@@ -10,12 +10,16 @@ enum Opt {
         /// Install destination. Default is `$XDG_DATA_HOME/intel-mkl-tool`
         path: Option<PathBuf>,
     },
+
     /// Seek Intel-MKL library
     ///
     /// 1. pkg-config
     /// 2. `$XDG_DATA_HOME/intel-mkl-tool`
     /// will be sought.
     Seek {},
+
+    /// Package Intel MKL libraries into an archive
+    Package { path: PathBuf },
 }
 
 fn main() -> Fallible<()> {
@@ -33,6 +37,7 @@ fn main() -> Fallible<()> {
             };
             intel_mkl_tool::download(&path)?;
         }
+
         Opt::Seek {} => {
             if let Some(path) = intel_mkl_tool::seek_pkg_config() {
                 println!("{}", path.display());
@@ -43,6 +48,10 @@ fn main() -> Fallible<()> {
                 return Ok(());
             }
             bail!("Intel-MKL not found.");
+        }
+
+        Opt::Package { path } => {
+            let _out = intel_mkl_tool::package(&path)?;
         }
     }
     Ok(())
