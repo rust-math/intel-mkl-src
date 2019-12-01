@@ -19,9 +19,6 @@ exclude = ["mkl_lib/mkl.tar.xz"]
 default = []
 use-shared = []
 
-[build-dependencies]
-failure = "0.1"
-
 [build-dependencies.intel-mkl-tool]
 version = "0.1.0"
 path = "../intel-mkl-tool"
