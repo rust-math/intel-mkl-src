@@ -32,7 +32,7 @@ fn main() {
             intel_mkl_tool::home_library_path()
         };
 
-        intel_mkl_tool::download(&out_dir).expect("Failed to dowload MKL archive");
+        intel_mkl_tool::download(&out_dir).expect("Failed to downalod Intel-MKL archive");
         out_dir
     };
     println!("cargo:rustc-link-search={}", out_dir.display());
