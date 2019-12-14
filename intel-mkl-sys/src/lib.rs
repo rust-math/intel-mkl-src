@@ -17,3 +17,17 @@
     non_snake_case
 )]
 include!("mkl.rs");
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cos() {
+        let a = vec![0.0_f64; 1024];
+        let mut b = vec![0.0_f64; 1024];
+        unsafe {
+            vdCos(1024_i32, a.as_ptr(), b.as_mut_ptr());
+        }
+    }
+}
