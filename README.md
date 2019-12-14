@@ -1,8 +1,16 @@
 # intel-mkl-src
-[![Crate](http://meritbadge.herokuapp.com/intel-mkl-src)](https://crates.io/crates/intel-mkl-src)
 [![Build Status](https://dev.azure.com/rust-math/intel-mkl-src/_apis/build/status/rust-math.intel-mkl-src?branchName=master)](https://dev.azure.com/rust-math/intel-mkl-src/_build/latest?definitionId=1&branchName=master)
 
+|crate | crate.io | description |
+|:-----|:--------:|:------------|
+|intel-mkl-src| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-src)](https://crates.io/crates/intel-mkl-src)| Source crate for Intel-MKL |
+|intel-mkl-sys| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-sys)](https://crates.io/crates/intel-mkl-sys)| FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
+|intel-mkl-tool| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-tool)](https://crates.io/crates/intel-mkl-tool)| CLI utility for redistributing Intel-MKL |
+
 Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (since 0.4.0)
+
+[VM]:  https://software.intel.com/en-us/mkl-developer-reference-c-vector-mathematical-functions
+[VSL]: https://software.intel.com/en-us/mkl-developer-reference-c-statistical-functions
 
 ## Usage
 
@@ -20,12 +28,6 @@ This crate does not download archive if `pkg-config` finds MKL shared library in
 Be sure to set `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` correctly.
 For debian and ubuntu users, [ci/Dockerfile](ci/Dockerfile) may be helpful.
 Windows is not supported yet.
-
-## `use-shared` feature
-
-(Optional, Experimental) This feature uses `$XDG_DATA_HOME/intel-mkl-tool` directory for downloading Intel-MKL.
-You can share this directory among several projects using `intel-mkl-src` crate.
-This will reduce disk occupancy and downloading time.
 
 ## License
 MKL is distributed under the Intel Simplified Software License for Intel(R) Math Kernel Library, See [License.txt](License.txt).
