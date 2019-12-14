@@ -21,9 +21,11 @@ extern crate intel_mkl_src;
 
 include!("mkl.rs");
 
+// Test linking
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::c_void;
 
     #[test]
     fn cos() {
@@ -31,6 +33,18 @@ mod tests {
         let mut b = vec![0.0_f64; 1024];
         unsafe {
             vdCos(1024_i32, a.as_ptr(), b.as_mut_ptr());
+        }
+    }
+
+    #[test]
+    fn new_stream() {
+        let mut stream: *mut c_void = std::ptr::null_mut();
+        unsafe {
+            vslNewStream(
+                &mut stream as *mut *mut c_void,
+                VSL_BRNG_MT19937 as i32,
+                777,
+            );
         }
     }
 }
