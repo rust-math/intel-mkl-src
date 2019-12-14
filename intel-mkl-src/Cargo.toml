@@ -5,15 +5,13 @@ authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
 description = "Redistribution of Intel(R) MKL as a crate"
-repository = "https://github.com/termoshtt/rust-intel-mkl"
+repository = "https://github.com/rust-math/intel-mkl-src"
 keywords = ["fft", "blas", "lapack"]
-license-file = "License.txt"
-readme = "README.md"
+license-file = "../License.txt"
+readme = "../README.md"
 
 build = "build.rs"
-links = "mkl_intel_lp64"
-
-exclude = ["mkl_lib/mkl.tar.xz"]
+links = "mkl_core"
 
 [features]
 default = []
