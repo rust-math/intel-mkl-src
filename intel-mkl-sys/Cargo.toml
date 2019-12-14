@@ -6,3 +6,10 @@ edition = "2018"
 
 [dependencies.intel-mkl-src]
 path = "../intel-mkl-src"
+
+[dev-dependencies]
+criterion = "*"
+
+[[bench]]
+name = "cos"
+harness = false
