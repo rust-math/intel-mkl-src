@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
+description = "CLI utility for redistributiing Intel(R) MKL"
+repository  = "https://github.com/rust-math/intel-mkl-src"
+keywords    = ["cli"]
+license     = "MIT"
+
 [features]
 default = ["cli"]
 cli = ["structopt", "env_logger"]
