@@ -8,7 +8,9 @@ edition = "2018"
 path = "../intel-mkl-src"
 
 [dev-dependencies]
-criterion = "*"
+criterion = "0.3"
+rand = "0.7"
+approx = "0.3"
 
 [[bench]]
 name = "cos"

@@ -25,14 +25,30 @@ include!("mkl.rs");
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::ulps_eq;
+    use rand::distributions::{Distribution, Uniform};
     use std::ffi::c_void;
+
+    fn gen_rand_array(n: usize) -> Vec<f64> {
+        let mut rng = rand::thread_rng();
+        let between = Uniform::from(0.0..2.0 * std::f64::consts::PI);
+        let mut buf = vec![0.0; n];
+        for val in buf.iter_mut() {
+            *val = between.sample(&mut rng);
+        }
+        buf
+    }
 
     #[test]
     fn cos() {
-        let a = vec![0.0_f64; 1024];
-        let mut b = vec![0.0_f64; 1024];
+        let n = 1024;
+        let a = gen_rand_array(n);
+        let mut b = vec![0.0_f64; n];
         unsafe {
-            vdCos(1024_i32, a.as_ptr(), b.as_mut_ptr());
+            vdCos(n as i32, a.as_ptr(), b.as_mut_ptr());
+        }
+        for i in 0..n {
+            ulps_eq!(b[i], a[i].cos(), max_ulps = 4, epsilon = std::f64::EPSILON);
         }
     }
 
