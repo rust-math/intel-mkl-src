@@ -37,13 +37,8 @@ mod mkl {
     pub const VERSION_UPDATE: u32 = 5;
 }
 
-pub fn archive_filename() -> String {
-    format!(
-        "{}_{}_{}.tar.zst",
-        mkl::ARCHIVE,
-        mkl::VERSION_YEAR,
-        mkl::VERSION_UPDATE
-    )
+pub fn archive_filename(archive: &str, year: u32, update: u32) -> String {
+    format!("{}_{}_{}.tar.zst", archive, year, update)
 }
 
 pub fn home_library_path() -> PathBuf {
@@ -77,9 +72,10 @@ pub fn download(out_dir: &Path) -> Result<()> {
         bail!("Not a directory: {}", out_dir.display());
     }
 
-    let archive = out_dir.join(archive_filename());
+    let filename = archive_filename(mkl::ARCHIVE, mkl::VERSION_YEAR, mkl::VERSION_UPDATE);
+    let archive = out_dir.join(&filename);
     if !archive.exists() {
-        let url = format!("{}/{}", S3_ADDR, archive_filename());
+        let url = format!("{}/{}", S3_ADDR, filename);
         info!("Download archive from AWS S3: {}", url);
         let f = fs::File::create(&archive)?;
         let mut buf = io::BufWriter::new(f);
@@ -139,7 +135,7 @@ pub fn package(mkl_path: &Path) -> Result<PathBuf> {
     }
     let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
     info!("Intel MKL version: {}.{}", year, update);
-    let out = PathBuf::from(archive_filename());
+    let out = PathBuf::from(archive_filename(mkl::ARCHIVE, year, update));
     info!("Create archive: {}", out.display());
 
     let shared_libs: Vec<_> = glob(
