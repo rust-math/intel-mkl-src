@@ -12,8 +12,10 @@ const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-inte
 
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod mkl {
-    pub const ARCHIVE: &'static str = "mkl_linux64";
-    pub const EXT: &'static str = "so";
+    pub const ARCHIVE_SHARED: &'static str = "mkl_linux64_shared";
+    pub const ARCHIVE_STATIC: &'static str = "mkl_linux64_static";
+    pub const EXTENSION_SHARED: &'static str = "so";
+    pub const EXTENSION_STATIC: &'static str = "a";
     pub const PREFIX: &'static str = "lib";
     pub const VERSION_YEAR: u32 = 2019;
     pub const VERSION_UPDATE: u32 = 5;
@@ -21,8 +23,9 @@ mod mkl {
 
 #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
 mod mkl {
-    pub const ARCHIVE: &'static str = "mkl_macos64";
-    pub const EXT: &'static str = "dylib";
+    pub const ARCHIVE_SHARED: &'static str = "mkl_macos64_shared";
+    pub const ARCHIVE_STATIC: &'static str = "mkl_macos64_static";
+    pub const EXTENSION_SHARED: &'static str = "dylib";
     pub const PREFIX: &'static str = "lib";
     pub const VERSION_YEAR: u32 = 2019;
     pub const VERSION_UPDATE: u32 = 3;
@@ -30,8 +33,9 @@ mod mkl {
 
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 mod mkl {
-    pub const ARCHIVE: &'static str = "mkl_windows64";
-    pub const EXT: &'static str = "lib";
+    pub const ARCHIVE_SHARED: &'static str = "mkl_windows64_shared";
+    pub const ARCHIVE_STATIC: &'static str = "mkl_windows64_static";
+    pub const EXTENSION_SHARED: &'static str = "lib";
     pub const PREFIX: &'static str = "";
     pub const VERSION_YEAR: u32 = 2019;
     pub const VERSION_UPDATE: u32 = 5;
@@ -72,7 +76,7 @@ pub fn download(out_dir: &Path) -> Result<()> {
         bail!("Not a directory: {}", out_dir.display());
     }
 
-    let filename = archive_filename(mkl::ARCHIVE, mkl::VERSION_YEAR, mkl::VERSION_UPDATE);
+    let filename = archive_filename(mkl::ARCHIVE_SHARED, mkl::VERSION_YEAR, mkl::VERSION_UPDATE);
     let archive = out_dir.join(&filename);
     if !archive.exists() {
         let url = format!("{}/{}", S3_ADDR, filename);
@@ -88,7 +92,7 @@ pub fn download(out_dir: &Path) -> Result<()> {
         info!("Archive already exists: {}", archive.display());
     }
 
-    let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
+    let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_SHARED));
     if !core.exists() {
         let f = fs::File::open(&archive)?;
         let de = zstd::stream::read::Decoder::new(f)?;
@@ -129,34 +133,56 @@ fn get_mkl_version(version_header: &Path) -> Result<(u32, u32)> {
     Ok((year, update))
 }
 
-pub fn package(mkl_path: &Path) -> Result<PathBuf> {
-    if !mkl_path.exists() {
-        bail!("MKL directory not found: {}", mkl_path.display());
+// Create tar.zst archive from path list
+fn create_archive(libs: &[PathBuf], out: &Path) -> Result<()> {
+    if out.exists() {
+        bail!("Output archive already exits: {}", out.display());
     }
-    let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
-    info!("Intel MKL version: {}.{}", year, update);
-    let out = PathBuf::from(archive_filename(mkl::ARCHIVE, year, update));
     info!("Create archive: {}", out.display());
-
-    let shared_libs: Vec<_> = glob(
-        mkl_path
-            .join(format!("lib/intel64/*.{}", mkl::EXT))
-            .to_str()
-            .unwrap(),
-    )?
-    .map(|path| path.unwrap())
-    .collect();
     let f = fs::File::create(&out)?;
     let buf = io::BufWriter::new(f);
     let zstd = zstd::stream::write::Encoder::new(buf, 6)?;
     let mut ar = tar::Builder::new(zstd);
     ar.mode(tar::HeaderMode::Deterministic);
-    for lib in &shared_libs {
+    for lib in libs {
         info!("Add {}", lib.display());
         ar.append_path_with_name(lib, lib.file_name().unwrap())?;
     }
     let zstd = ar.into_inner()?;
     zstd.finish()?;
+    Ok(())
+}
 
-    Ok(out)
+pub fn package(mkl_path: &Path) -> Result<()> {
+    if !mkl_path.exists() {
+        bail!("MKL directory not found: {}", mkl_path.display());
+    }
+    let (year, update) = get_mkl_version(&mkl_path.join("include/mkl_version.h"))?;
+    info!("Intel MKL version: {}.{}", year, update);
+
+    create_archive(
+        &glob(
+            mkl_path
+                .join(format!("lib/intel64/*.{}", mkl::EXTENSION_SHARED))
+                .to_str()
+                .unwrap(),
+        )?
+        .map(|path| path.unwrap())
+        .collect::<Vec<_>>(),
+        &PathBuf::from(archive_filename(mkl::ARCHIVE_SHARED, year, update)),
+    )?;
+
+    create_archive(
+        &glob(
+            mkl_path
+                .join(format!("lib/intel64/*.{}", mkl::EXTENSION_STATIC))
+                .to_str()
+                .unwrap(),
+        )?
+        .map(|path| path.unwrap())
+        .collect::<Vec<_>>(),
+        &PathBuf::from(archive_filename(mkl::ARCHIVE_STATIC, year, update)),
+    )?;
+
+    Ok(())
 }
