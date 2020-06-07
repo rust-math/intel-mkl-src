@@ -1,4 +1,5 @@
 use anyhow::*;
+use intel_mkl_tool::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
 
@@ -9,6 +10,10 @@ enum Opt {
     Download {
         /// Install destination. Default is `$XDG_DATA_HOME/intel-mkl-tool`
         path: Option<PathBuf>,
+        /// Version of Intel MKL
+        year: Option<u32>,
+        /// Version of Intel MKL
+        update: Option<u32>,
     },
 
     /// Seek Intel-MKL library
@@ -29,13 +34,12 @@ fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     match opt {
-        Opt::Download { path } => {
-            let path = if let Some(path) = path {
-                path
-            } else {
-                intel_mkl_tool::home_library_path()
-            };
-            intel_mkl_tool::download(&path)?;
+        Opt::Download { path, year, update } => {
+            let path = path.unwrap_or(xdg_home_path());
+            let year = year.unwrap_or(mkl::VERSION_YEAR);
+            let update = update.unwrap_or(intel_mkl_tool::mkl::VERSION_UPDATE);
+            download(&path, mkl::ARCHIVE_SHARED, year, update)?;
+            download(&path, mkl::ARCHIVE_STATIC, year, update)?;
         }
 
         Opt::Seek {} => {

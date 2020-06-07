@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use intel_mkl_tool::*;
 use std::{env, path::*};
 
 fn main() {
@@ -27,12 +28,28 @@ fn main() {
         path
     } else {
         let out_dir = if cfg!(feature = "use-shared") {
-            intel_mkl_tool::home_library_path()
+            intel_mkl_tool::xdg_home_path()
         } else {
             PathBuf::from(env::var("OUT_DIR").expect("Failed to get OUT_DIR"))
         };
 
-        intel_mkl_tool::download(&out_dir).expect("Failed to downalod Intel-MKL archive");
+        if cfg!(feature = "static") {
+            download(
+                &out_dir,
+                mkl::ARCHIVE_STATIC,
+                mkl::VERSION_YEAR,
+                mkl::VERSION_UPDATE,
+            )
+            .expect("Failed to downalod Intel-MKL archive");
+        } else {
+            download(
+                &out_dir,
+                mkl::ARCHIVE_SHARED,
+                mkl::VERSION_YEAR,
+                mkl::VERSION_UPDATE,
+            )
+            .expect("Failed to downalod Intel-MKL archive");
+        }
         out_dir
     };
     println!("cargo:rustc-link-search={}", out_dir.display());

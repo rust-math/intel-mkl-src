@@ -4,25 +4,25 @@ use glob::glob;
 use log::*;
 use std::{
     fs,
-    io::{self, BufRead, Write},
+    io::{self, BufRead},
     path::*,
 };
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
-mod mkl {
+pub mod mkl {
     pub const ARCHIVE_SHARED: &'static str = "mkl_linux64_shared";
     pub const ARCHIVE_STATIC: &'static str = "mkl_linux64_static";
     pub const EXTENSION_SHARED: &'static str = "so";
     pub const EXTENSION_STATIC: &'static str = "a";
     pub const PREFIX: &'static str = "lib";
-    pub const VERSION_YEAR: u32 = 2019;
-    pub const VERSION_UPDATE: u32 = 5;
+    pub const VERSION_YEAR: u32 = 2020;
+    pub const VERSION_UPDATE: u32 = 1;
 }
 
 #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
-mod mkl {
+pub mod mkl {
     pub const ARCHIVE_SHARED: &'static str = "mkl_macos64_shared";
     pub const ARCHIVE_STATIC: &'static str = "mkl_macos64_static";
     pub const EXTENSION_SHARED: &'static str = "dylib";
@@ -32,9 +32,8 @@ mod mkl {
 }
 
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-mod mkl {
-    pub const ARCHIVE_SHARED: &'static str = "mkl_windows64_shared";
-    pub const ARCHIVE_STATIC: &'static str = "mkl_windows64_static";
+pub mod mkl {
+    pub const ARCHIVE_SHARED: &'static str = "mkl_windows64";
     pub const EXTENSION_SHARED: &'static str = "lib";
     pub const PREFIX: &'static str = "";
     pub const VERSION_YEAR: u32 = 2019;
@@ -45,7 +44,7 @@ pub fn archive_filename(archive: &str, year: u32, update: u32) -> String {
     format!("{}_{}_{}.tar.zst", archive, year, update)
 }
 
-pub fn home_library_path() -> PathBuf {
+pub fn xdg_home_path() -> PathBuf {
     dirs::data_local_dir().unwrap().join("intel-mkl-tool")
 }
 
@@ -60,48 +59,44 @@ pub fn seek_pkg_config() -> Option<PathBuf> {
 }
 
 pub fn seek_home() -> Option<PathBuf> {
-    let home_lib = home_library_path();
+    let home_lib = xdg_home_path();
     if home_lib.is_dir() {
         return Some(home_lib);
     }
     None
 }
 
-pub fn download(out_dir: &Path) -> Result<()> {
-    if !out_dir.exists() {
-        info!("Create output directory: {}", out_dir.display());
-        fs::create_dir_all(out_dir)?;
+fn download_archive_to_buffer(url: &str) -> Result<Vec<u8>> {
+    let mut data = Vec::new();
+    let mut handle = Easy::new();
+    handle.url(url)?;
+    {
+        let mut transfer = handle.transfer();
+        transfer
+            .write_function(|new_data| {
+                data.extend_from_slice(new_data);
+                Ok(new_data.len())
+            })
+            .unwrap();
+        transfer.perform().unwrap();
     }
-    if !out_dir.is_dir() {
-        bail!("Not a directory: {}", out_dir.display());
-    }
+    Ok(data)
+}
 
-    let filename = archive_filename(mkl::ARCHIVE_SHARED, mkl::VERSION_YEAR, mkl::VERSION_UPDATE);
-    let archive = out_dir.join(&filename);
-    if !archive.exists() {
-        let url = format!("{}/{}", S3_ADDR, filename);
-        info!("Download archive from AWS S3: {}", url);
-        let f = fs::File::create(&archive)?;
-        let mut buf = io::BufWriter::new(f);
-        let mut easy = Easy::new();
-        easy.url(&url)?;
-        easy.write_function(move |data| Ok(buf.write(data).unwrap()))?;
-        easy.perform()?;
-        assert!(archive.exists());
-    } else {
-        info!("Archive already exists: {}", archive.display());
-    }
+pub fn download(base_dir: &Path, prefix: &str, year: u32, update: u32) -> Result<()> {
+    let filename = format!("{}_{}_{}.tar.zst", prefix, year, update);
+    let dest_dir = base_dir.join(&format!("{}_{}_{}", prefix, year, update));
 
-    let core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_SHARED));
-    if !core.exists() {
-        let f = fs::File::open(&archive)?;
-        let de = zstd::stream::read::Decoder::new(f)?;
-        let mut arc = tar::Archive::new(de);
-        arc.unpack(&out_dir)?;
-        assert!(core.exists());
-    } else {
-        info!("Archive has already been extracted");
+    if dest_dir.exists() {
+        bail!("Directory already exists: {}", dest_dir.display());
     }
+    fs::create_dir_all(&dest_dir)?;
+
+    info!("Download archive {} into {}", filename, dest_dir.display());
+    let data = download_archive_to_buffer(&format!("{}/{}", S3_ADDR, filename))?;
+    let zstd = zstd::stream::read::Decoder::new(data.as_slice())?;
+    let mut arc = tar::Archive::new(zstd);
+    arc.unpack(&dest_dir)?;
     Ok(())
 }
 
