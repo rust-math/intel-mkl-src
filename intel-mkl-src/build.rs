@@ -27,12 +27,12 @@ fn main() {
         path
     } else {
         let out_dir = if cfg!(feature = "use-shared") {
-            intel_mkl_tool::home_library_path()
+            intel_mkl_tool::xdg_home_path()
         } else {
             PathBuf::from(env::var("OUT_DIR").expect("Failed to get OUT_DIR"))
         };
 
-        intel_mkl_tool::download(&out_dir).expect("Failed to downalod Intel-MKL archive");
+        intel_mkl_tool::download_default(&out_dir).expect("Failed to downalod Intel-MKL archive");
         out_dir
     };
     println!("cargo:rustc-link-search={}", out_dir.display());
