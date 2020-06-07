@@ -8,6 +8,7 @@ use std::{fs, path::*};
 fn download_archive_to_buffer(url: &str) -> Result<Vec<u8>> {
     let mut data = Vec::new();
     let mut handle = Easy::new();
+    handle.fail_on_error(true)?;
     handle.url(url)?;
     {
         let mut transfer = handle.transfer();
@@ -37,4 +38,22 @@ pub fn download(base_dir: &Path, prefix: &str, year: u32, update: u32) -> Result
     let mut arc = tar::Archive::new(zstd);
     arc.unpack(&dest_dir)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mkl;
+
+    #[test]
+    fn download_url() {
+        let url = format!(
+            "{}/{}_{}_{}.tar.zst",
+            S3_ADDR,
+            mkl::ARCHIVE_STATIC,
+            mkl::VERSION_YEAR,
+            mkl::VERSION_UPDATE
+        );
+        let _ar = download_archive_to_buffer(&url).unwrap();
+    }
 }
