@@ -1,0 +1,54 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: {}
+
+jobs:
+  windows:
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        target: ["intel-mkl-src", "intel-mkl-sys", "intel-mkl-tool"]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --manifest-path=${{ matrix.target }}/Cargo.toml
+
+  macos:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        target: ["intel-mkl-src", "intel-mkl-sys", "intel-mkl-tool"]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --manifest-path=${{ matrix.target }}/Cargo.toml
+
+  linux:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        target: ["intel-mkl-src", "intel-mkl-sys", "intel-mkl-tool"]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --manifest-path=${{ matrix.target }}/Cargo.toml
+
+  check-format:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: -- --check
+
