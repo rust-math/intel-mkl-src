@@ -81,22 +81,24 @@ pub fn package(mkl_path: &Path) -> Result<()> {
         )),
     )?;
 
-    create_archive(
-        &glob(
-            mkl_path
-                .join(format!("lib/intel64/*.{}", mkl::EXTENSION_STATIC))
-                .to_str()
-                .unwrap(),
-        )?
-        .map(|path| path.unwrap())
-        .collect::<Vec<_>>(),
-        &PathBuf::from(&format!(
-            "{}_{}_{}.tar.zst",
-            mkl::ARCHIVE_STATIC,
-            year,
-            update
-        )),
-    )?;
+    if cfg!(target_or = "linux") {
+        create_archive(
+            &glob(
+                mkl_path
+                    .join(format!("lib/intel64/*.{}", mkl::EXTENSION_STATIC))
+                    .to_str()
+                    .unwrap(),
+            )?
+            .map(|path| path.unwrap())
+            .collect::<Vec<_>>(),
+            &PathBuf::from(&format!(
+                "{}_{}_{}.tar.zst",
+                mkl::ARCHIVE_STATIC,
+                year,
+                update
+            )),
+        )?;
+    }
 
     Ok(())
 }

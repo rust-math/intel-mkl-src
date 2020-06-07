@@ -23,7 +23,6 @@ pub mod mkl {
 #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
 pub mod mkl {
     pub const ARCHIVE_SHARED: &'static str = "mkl_macos64_shared";
-    pub const ARCHIVE_STATIC: &'static str = "mkl_macos64_static";
     pub const EXTENSION_SHARED: &'static str = "dylib";
     pub const PREFIX: &'static str = "lib";
     pub const VERSION_YEAR: u32 = 2019;
