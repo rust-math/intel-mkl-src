@@ -1,7 +1,9 @@
+mod config;
 mod download;
 mod package;
 mod seek;
 
+pub use config::*;
 pub use download::*;
 pub use package::*;
 pub use seek::*;
