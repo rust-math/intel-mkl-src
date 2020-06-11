@@ -1,9 +1,11 @@
 use log::*;
 use std::path::*;
 
+mod config;
 mod download;
 mod package;
 
+pub use config::*;
 pub use download::*;
 pub use package::*;
 
