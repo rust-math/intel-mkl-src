@@ -43,15 +43,24 @@ fn main() -> Result<()> {
         }
 
         Opt::Seek {} => {
-            if let Some(path) = intel_mkl_tool::seek_pkg_config() {
-                println!("{}", path.display());
-                return Ok(());
+            println!("pkg-config");
+            println!("-----------");
+            for (name, _lib) in intel_mkl_tool::seek_pkg_config() {
+                println!("- {}", name);
             }
-            if let Some(path) = intel_mkl_tool::seek_home() {
-                println!("{}", path.display());
-                return Ok(());
+
+            let title = format!(
+                "xdg-data-home (base = {})",
+                intel_mkl_tool::xdg_home_path().display()
+            );
+            println!(
+                "\n{}\n{}",
+                title,
+                std::str::from_utf8(vec!('-' as u8; title.len() + 1).as_slice()).unwrap()
+            );
+            for (name, _path) in intel_mkl_tool::seek_xdg_home() {
+                println!("- {}", name);
             }
-            bail!("Intel-MKL not found.");
         }
 
         Opt::Package { path } => {

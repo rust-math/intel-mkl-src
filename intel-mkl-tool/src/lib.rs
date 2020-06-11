@@ -1,11 +1,10 @@
-use log::*;
-use std::path::*;
-
 mod download;
 mod package;
+mod seek;
 
 pub use download::*;
 pub use package::*;
+pub use seek::*;
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 
@@ -36,26 +35,4 @@ pub mod mkl {
     pub const PREFIX: &'static str = "";
     pub const VERSION_YEAR: u32 = 2019;
     pub const VERSION_UPDATE: u32 = 5;
-}
-
-pub fn xdg_home_path() -> PathBuf {
-    dirs::data_local_dir().unwrap().join("intel-mkl-tool")
-}
-
-pub fn seek_pkg_config() -> Option<PathBuf> {
-    if let Ok(lib) = pkg_config::probe_library("mkl-dynamic-lp64-iomp") {
-        if lib.libs.len() > 1 {
-            warn!("Found {} MKL libraries. Use first found.", lib.libs.len())
-        }
-        return Some(PathBuf::from(lib.libs[0].clone()));
-    }
-    None
-}
-
-pub fn seek_home() -> Option<PathBuf> {
-    let home_lib = xdg_home_path();
-    if home_lib.is_dir() {
-        return Some(home_lib);
-    }
-    None
 }
