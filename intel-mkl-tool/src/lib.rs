@@ -13,6 +13,7 @@ const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-inte
 mod mkl {
     pub const ARCHIVE: &'static str = "mkl_linux64";
     pub const EXT: &'static str = "so";
+    pub const PREFIX: &'static str = "lib";
     pub const VERSION_YEAR: u32 = 2019;
     pub const VERSION_UPDATE: u32 = 5;
 }

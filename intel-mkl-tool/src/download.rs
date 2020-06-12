@@ -3,7 +3,7 @@ use crate::{mkl, S3_ADDR};
 use anyhow::*;
 use curl::easy::Easy;
 use log::*;
-use std::{fs, path::*};
+use std::path::*;
 
 fn download_archive_to_buffer(url: &str) -> Result<Vec<u8>> {
     let mut data = Vec::new();
@@ -22,26 +22,25 @@ fn download_archive_to_buffer(url: &str) -> Result<Vec<u8>> {
     Ok(data)
 }
 
-pub fn download(base_dir: &Path, prefix: &str, year: u32, update: u32) -> Result<()> {
-    let filename = format!("{}_{}_{}.tar.zst", prefix, year, update);
-    let dest_dir = base_dir.join(&format!("{}_{}_{}", prefix, year, update));
-
-    if dest_dir.exists() {
-        bail!("Directory already exists: {}", dest_dir.display());
+pub fn download(out_dir: &Path, prefix: &str, year: u32, update: u32) -> Result<()> {
+    let mkl_core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
+    if mkl_core.exists() {
+        info!("Archive already exists: {}", out_dir.display());
+        return Ok(());
     }
-    fs::create_dir_all(&dest_dir)?;
 
-    info!("Download archive {} into {}", filename, dest_dir.display());
+    let filename = format!("{}_{}_{}.tar.zst", prefix, year, update);
+    info!("Download archive {} into {}", filename, out_dir.display());
     let data = download_archive_to_buffer(&format!("{}/{}", S3_ADDR, filename))?;
     let zstd = zstd::stream::read::Decoder::new(data.as_slice())?;
     let mut arc = tar::Archive::new(zstd);
-    arc.unpack(&dest_dir)?;
+    arc.unpack(&out_dir)?;
     Ok(())
 }
 
-pub fn download_default(base_dir: &Path) -> Result<()> {
+pub fn download_default(out_dir: &Path) -> Result<()> {
     download(
-        base_dir,
+        out_dir,
         mkl::ARCHIVE,
         mkl::VERSION_YEAR,
         mkl::VERSION_UPDATE,
