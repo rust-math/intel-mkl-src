@@ -1,5 +1,5 @@
-use curl::easy::Easy;
 use anyhow::*;
+use curl::easy::Easy;
 use glob::glob;
 use log::*;
 use std::{
