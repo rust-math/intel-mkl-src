@@ -1,6 +1,19 @@
+use crate::{mkl, xdg_home_path};
 use anyhow::*;
 use derive_more::Display;
+use log::*;
 use std::path::*;
+
+const VALID_CONFIGS: &[&str] = &[
+    "mkl-dynamic-ilp64-iomp",
+    "mkl-dynamic-ilp64-seq",
+    "mkl-dynamic-lp64-iomp",
+    "mkl-dynamic-lp64-seq",
+    "mkl-static-ilp64-iomp",
+    "mkl-static-ilp64-seq",
+    "mkl-static-lp64-iomp",
+    "mkl-static-lp64-seq",
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Display)]
 pub enum Link {
@@ -26,6 +39,7 @@ pub enum Parallel {
     Sequential,
 }
 
+/// Configure for linking, downloading and packaging Intel MKL
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Config {
     link: Link,
@@ -34,6 +48,17 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn available() -> Vec<Self> {
+        VALID_CONFIGS
+            .iter()
+            .flat_map(|name| {
+                let cfg = Self::from_str(name).ok()?;
+                let _dir = cfg.base_dir().ok()?;
+                Some(cfg)
+            })
+            .collect()
+    }
+
     pub fn from_str(name: &str) -> Result<Self> {
         let parts: Vec<_> = name.split("-").collect();
         if parts.len() != 4 {
@@ -74,24 +99,73 @@ impl Config {
         format!("mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
     }
 
-    fn base_dir(&self) -> PathBuf {
-        todo!()
+    /// Get the directory where the library exists
+    ///
+    /// This will seek followings in this order:
+    ///
+    /// - $OUT_DIR
+    ///   - Only for build.rs
+    ///   - This exists only when the previous build downloads archive here
+    /// - pkg-config ${name}
+    ///   - Installed by package manager or official downloader
+    /// - $XDG_DATA_HOME/intel-mkl-tool/${name}
+    ///   - Downloaded by this crate
+    ///
+    /// Returns error if no library found
+    ///
+    pub fn base_dir(&self) -> Result<PathBuf> {
+        let core = match self.link {
+            Link::Static => format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_STATIC),
+            Link::Shared => format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_SHARED),
+        };
+
+        // OUT_DIR
+        if let Ok(dir) = std::env::var("OUT_DIR") {
+            let out_dir = PathBuf::from(dir);
+            if out_dir.join(&core).exists() {
+                return Ok(out_dir);
+            }
+        }
+
+        // pkg-config
+        if let Ok(lib) = pkg_config::Config::new()
+            .cargo_metadata(false)
+            .probe(&self.name())
+        {
+            if !lib.link_paths.is_empty() {
+                let path = &lib.link_paths[0];
+                if path.join(&core).exists() {
+                    return Ok(path.clone());
+                }
+                warn!("{} not found in {}", &core, path.display());
+            }
+            warn!("No link path exists in pkg-config entry of {}", self.name());
+        }
+
+        // XDG_DATA_HOME
+        let path = xdg_home_path().join(self.name());
+        if path.exists() {
+            return Ok(path);
+        }
+
+        // None found
+        bail!("No library found for {}", self.name());
     }
 
     /// Static and shared library lists to be linked
     pub fn libs(
         &self,
-    ) -> (
+    ) -> Result<(
         Vec<PathBuf>, /* static */
         Vec<String>,  /* shared */
-    ) {
+    )> {
         // FIXME this implementation is for Linux, fix for Windows and macOS
         let mut static_libs = Vec::new();
         let mut shared_libs = vec!["pthread".into(), "m".into(), "dl".into()];
+        let base_dir = self.base_dir()?;
 
         let mut add = |name: &str| match self.link {
             Link::Static => {
-                let base_dir: PathBuf = self.base_dir();
                 let path = base_dir.join(format!("lib{}.a", name));
                 assert!(path.exists());
                 static_libs.push(path);
@@ -119,7 +193,7 @@ impl Config {
                 add("mkl_sequential");
             }
         };
-        (static_libs, shared_libs)
+        Ok((static_libs, shared_libs))
     }
 
     /// Check if pkg-config has a corresponding setting
@@ -165,17 +239,7 @@ mod tests {
 
     #[test]
     fn name_to_config_to_name() -> Result<()> {
-        let valid_names = [
-            "mkl-dynamic-ilp64-iomp",
-            "mkl-dynamic-ilp64-seq",
-            "mkl-dynamic-lp64-iomp",
-            "mkl-dynamic-lp64-seq",
-            "mkl-static-ilp64-iomp",
-            "mkl-static-ilp64-seq",
-            "mkl-static-lp64-iomp",
-            "mkl-static-lp64-seq",
-        ];
-        for name in &valid_names {
+        for name in VALID_CONFIGS {
             let cfg = Config::from_str(name)?;
             assert_eq!(&cfg.name(), name);
         }
