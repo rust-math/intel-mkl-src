@@ -33,9 +33,9 @@ fn main() -> Result<()> {
             let path = if let Some(path) = path {
                 path
             } else {
-                intel_mkl_tool::home_library_path()
+                intel_mkl_tool::xdg_home_path()
             };
-            intel_mkl_tool::download(&path)?;
+            intel_mkl_tool::download_default(&path)?;
         }
 
         Opt::Seek {} => {
