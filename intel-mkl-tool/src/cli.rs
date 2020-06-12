@@ -1,4 +1,4 @@
-use failure::*;
+use anyhow::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
 
@@ -22,7 +22,7 @@ enum Opt {
     Package { path: PathBuf },
 }
 
-fn main() -> Fallible<()> {
+fn main() -> Result<()> {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
 

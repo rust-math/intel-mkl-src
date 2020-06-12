@@ -1,5 +1,5 @@
+use anyhow::*;
 use curl::easy::Easy;
-use failure::*;
 use glob::glob;
 use log::*;
 use std::{
@@ -68,7 +68,7 @@ pub fn seek_home() -> Option<PathBuf> {
     None
 }
 
-pub fn download(out_dir: &Path) -> Fallible<()> {
+pub fn download(out_dir: &Path) -> Result<()> {
     if !out_dir.exists() {
         info!("Create output directory: {}", out_dir.display());
         fs::create_dir_all(out_dir)?;
@@ -106,7 +106,7 @@ pub fn download(out_dir: &Path) -> Fallible<()> {
 }
 
 // Read mkl_version.h to get MKL version (e.g. 2019.5)
-fn get_mkl_version(version_header: &Path) -> Fallible<(u32, u32)> {
+fn get_mkl_version(version_header: &Path) -> Result<(u32, u32)> {
     if !version_header.exists() {
         bail!("MKL Version file not found: {}", version_header.display());
     }
@@ -133,7 +133,7 @@ fn get_mkl_version(version_header: &Path) -> Fallible<(u32, u32)> {
     Ok((year, update))
 }
 
-pub fn package(mkl_path: &Path) -> Fallible<PathBuf> {
+pub fn package(mkl_path: &Path) -> Result<PathBuf> {
     if !mkl_path.exists() {
         bail!("MKL directory not found: {}", mkl_path.display());
     }
