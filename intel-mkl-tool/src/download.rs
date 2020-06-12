@@ -23,7 +23,7 @@ fn download_archive_to_buffer(url: &str) -> Result<Vec<u8>> {
 }
 
 pub fn download(out_dir: &Path, prefix: &str, year: u32, update: u32) -> Result<()> {
-    let mkl_core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXT));
+    let mkl_core = out_dir.join(format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_SHARED));
     if mkl_core.exists() {
         info!("Archive already exists: {}", out_dir.display());
         return Ok(());
