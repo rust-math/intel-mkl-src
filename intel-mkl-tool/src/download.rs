@@ -45,6 +45,7 @@ mod tests {
     use super::*;
     use crate::mkl;
 
+    #[ignore]
     #[test]
     fn download_url() {
         let url = format!(
