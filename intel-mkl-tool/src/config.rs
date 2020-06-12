@@ -4,7 +4,7 @@ use derive_more::Display;
 use log::*;
 use std::path::*;
 
-const VALID_CONFIGS: &[&str] = &[
+pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
     "mkl-dynamic-ilp64-seq",
     "mkl-dynamic-lp64-iomp",
@@ -42,23 +42,12 @@ pub enum Parallel {
 /// Configure for linking, downloading and packaging Intel MKL
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Config {
-    link: Link,
-    index_size: IndexSize,
-    parallel: Parallel,
+    pub link: Link,
+    pub index_size: IndexSize,
+    pub parallel: Parallel,
 }
 
 impl Config {
-    pub fn available() -> Vec<Self> {
-        VALID_CONFIGS
-            .iter()
-            .flat_map(|name| {
-                let cfg = Self::from_str(name).ok()?;
-                let _dir = cfg.base_dir().ok()?;
-                Some(cfg)
-            })
-            .collect()
-    }
-
     pub fn from_str(name: &str) -> Result<Self> {
         let parts: Vec<_> = name.split("-").collect();
         if parts.len() != 4 {
@@ -136,10 +125,22 @@ impl Config {
                 let path = &lib.link_paths[0];
                 if path.join(&core).exists() {
                     return Ok(path.clone());
+                } else {
+                    warn!("{} not found in {}", &core, path.display());
                 }
-                warn!("{} not found in {}", &core, path.display());
+            } else if !lib.include_paths.is_empty() {
+                // assumes following directory structure:
+                //
+                // - mkl
+                //   - include      <- lib.include_paths detects this
+                //   - lib/intel64
+                let path = lib.include_paths[0].join("../lib/intel64");
+                if path.join(&core).exists() {
+                    return Ok(path.canonicalize()?.clone());
+                }
+            } else {
+                warn!("No link path exists in pkg-config entry of {}", self.name());
             }
-            warn!("No link path exists in pkg-config entry of {}", self.name());
         }
 
         // XDG_DATA_HOME
@@ -152,69 +153,8 @@ impl Config {
         bail!("No library found for {}", self.name());
     }
 
-    /// Static and shared library lists to be linked
-    pub fn libs(
-        &self,
-    ) -> Result<(
-        Vec<PathBuf>, /* static */
-        Vec<String>,  /* shared */
-    )> {
-        // FIXME this implementation is for Linux, fix for Windows and macOS
-        let mut static_libs = Vec::new();
-        let mut shared_libs = vec!["pthread".into(), "m".into(), "dl".into()];
-        let base_dir = self.base_dir()?;
-
-        let mut add = |name: &str| match self.link {
-            Link::Static => {
-                let path = base_dir.join(format!("lib{}.a", name));
-                assert!(path.exists());
-                static_libs.push(path);
-            }
-            Link::Shared => {
-                shared_libs.push(name.to_string());
-            }
-        };
-
-        add("mkl_core");
-        match self.index_size {
-            IndexSize::LP64 => {
-                add("mkl_intel_lp64");
-            }
-            IndexSize::ILP64 => {
-                add("mkl_intel_ilp64");
-            }
-        };
-        match self.parallel {
-            Parallel::OpenMP => {
-                add("iomp5");
-                add("mkl_intel_thread");
-            }
-            Parallel::Sequential => {
-                add("mkl_sequential");
-            }
-        };
-        Ok((static_libs, shared_libs))
-    }
-
-    /// Check if pkg-config has a corresponding setting
-    pub fn pkg_config(&self) -> Option<pkg_config::Library> {
-        pkg_config::Config::new()
-            .cargo_metadata(false)
-            .probe(&self.name())
-            .ok()
-    }
-
-    /// Check if archive is cached in $XDG_DATA_HOME
-    pub fn exists(&self) -> bool {
-        todo!()
-    }
-
     /// Download MKL archive and cache into $XDG_DATA_HOME
     pub fn download(&self) -> PathBuf {
-        todo!()
-    }
-
-    pub fn print_cargo_metadata(&self) {
         todo!()
     }
 }

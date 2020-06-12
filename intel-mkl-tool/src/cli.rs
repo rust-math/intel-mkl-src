@@ -1,4 +1,5 @@
 use anyhow::*;
+use intel_mkl_tool::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
 
@@ -33,25 +34,20 @@ fn main() -> Result<()> {
             let path = if let Some(path) = path {
                 path
             } else {
-                intel_mkl_tool::xdg_home_path()
+                xdg_home_path()
             };
-            intel_mkl_tool::download_default(&path)?;
+            download_default(&path)?;
         }
 
         Opt::Seek {} => {
-            if let Some(path) = intel_mkl_tool::seek_pkg_config() {
-                println!("{}", path.display());
-                return Ok(());
+            for lib in LinkConfig::available() {
+                // len("mkl-dynamic-ilp64-iomp") == 22
+                println!("{:<22} at {}", lib.name(), lib.path().display());
             }
-            if let Some(path) = intel_mkl_tool::seek_home() {
-                println!("{}", path.display());
-                return Ok(());
-            }
-            bail!("Intel-MKL not found.");
         }
 
         Opt::Package { path } => {
-            let _out = intel_mkl_tool::package(&path)?;
+            let _out = package(&path)?;
         }
     }
     Ok(())
