@@ -34,8 +34,39 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_name(_name: &str) -> Result<Self> {
-        todo!()
+    pub fn from_str(name: &str) -> Result<Self> {
+        let parts: Vec<_> = name.split("-").collect();
+        if parts.len() != 4 {
+            bail!("Invalid name: {}", name);
+        }
+
+        if parts[0] != "mkl" {
+            bail!("Name must start with 'mkl': {}", name);
+        }
+
+        let link = match parts[1] {
+            "static" => Link::Static,
+            "dynamic" => Link::Shared,
+            another => bail!("Invalid link spec: {}", another),
+        };
+
+        let index_size = match parts[2] {
+            "lp64" => IndexSize::LP64,
+            "ilp64" => IndexSize::ILP64,
+            another => bail!("Invalid index spec: {}", another),
+        };
+
+        let parallel = match parts[3] {
+            "iomp" => Parallel::OpenMP,
+            "seq" => Parallel::Sequential,
+            another => bail!("Invalid parallel spec: {}", another),
+        };
+
+        Ok(Config {
+            link,
+            index_size,
+            parallel,
+        })
     }
 
     /// identifier used in pkg-config
@@ -111,5 +142,54 @@ impl Config {
 
     pub fn print_cargo_metadata(&self) {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn name_to_config() -> Result<()> {
+        let cfg = Config::from_str("mkl-static-lp64-iomp")?;
+        assert_eq!(
+            cfg,
+            Config {
+                link: Link::Static,
+                index_size: IndexSize::LP64,
+                parallel: Parallel::OpenMP
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn name_to_config_to_name() -> Result<()> {
+        let valid_names = [
+            "mkl-dynamic-ilp64-iomp",
+            "mkl-dynamic-ilp64-seq",
+            "mkl-dynamic-lp64-iomp",
+            "mkl-dynamic-lp64-seq",
+            "mkl-static-ilp64-iomp",
+            "mkl-static-ilp64-seq",
+            "mkl-static-lp64-iomp",
+            "mkl-static-lp64-seq",
+        ];
+        for name in &valid_names {
+            let cfg = Config::from_str(name)?;
+            assert_eq!(&cfg.name(), name);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn invalid_names() -> Result<()> {
+        assert!(Config::from_str("").is_err());
+        assert!(Config::from_str("static-lp64-iomp").is_err());
+        assert!(Config::from_str("mkll-static-lp64-iomp").is_err());
+        assert!(Config::from_str("mkl-sttic-lp64-iomp").is_err());
+        assert!(Config::from_str("mkl-static-l64-iomp").is_err());
+        assert!(Config::from_str("mkl-static-lp64-omp").is_err());
+        Ok(())
     }
 }
