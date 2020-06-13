@@ -1,11 +1,47 @@
 use crate::*;
 use anyhow::*;
+use derive_more::Deref;
+use std::collections::{HashMap, HashSet};
+
+#[derive(Debug, Deref)]
+pub struct Targets(HashMap<String, Option<PathBuf>>);
+
+impl Targets {
+    fn new(config: Config) -> Self {
+        let mut targets: HashMap<String, Option<PathBuf>> = HashMap::new();
+        for name in config.libs() {
+            let target = match config.link {
+                Link::Static => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC),
+                Link::Shared => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
+            };
+            targets.insert(target, None);
+        }
+        Self(targets)
+    }
+
+    fn found_all(&self) -> bool {
+        self.0.iter().all(|(_key, value)| value.is_some())
+    }
+
+    fn seek(&mut self, dir: &Path) {
+        for (key, value) in &mut self.0 {
+            if dir.join(key).exists() {
+                value.get_or_insert(dir.canonicalize().unwrap());
+            }
+        }
+    }
+
+    fn paths(&self) -> Vec<PathBuf> {
+        let set: HashSet<PathBuf> = self.0.values().cloned().map(|path| path.unwrap()).collect(); // must be redundant
+        set.into_iter().collect()
+    }
+}
 
 /// Handler for found library
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug)]
 pub struct LinkConfig {
     config: Config,
-    path: PathBuf,
+    targets: Targets,
 }
 
 impl LinkConfig {
@@ -24,20 +60,12 @@ impl LinkConfig {
     /// Returns error if no library found
     ///
     pub fn from_config(config: Config) -> Result<Self> {
-        let core = match config.link {
-            Link::Static => format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_STATIC),
-            Link::Shared => format!("{}mkl_core.{}", mkl::PREFIX, mkl::EXTENSION_SHARED),
-        };
+        let mut targets = Targets::new(config);
 
         // OUT_DIR
         if let Ok(dir) = std::env::var("OUT_DIR") {
             let out_dir = PathBuf::from(dir);
-            if out_dir.join(&core).exists() {
-                return Ok(Self {
-                    config,
-                    path: out_dir,
-                });
-            }
+            targets.seek(&out_dir);
         }
 
         // pkg-config
@@ -45,51 +73,38 @@ impl LinkConfig {
             .cargo_metadata(false)
             .probe(&config.name())
         {
-            if !lib.link_paths.is_empty() {
-                let path = &lib.link_paths[0];
-                if path.join(&core).exists() {
-                    return Ok(Self {
-                        config,
-                        path: path.clone(),
-                    });
-                }
+            for path in lib.link_paths {
+                targets.seek(&path);
             }
-            if !lib.include_paths.is_empty() {
-                // assumes following directory structure:
-                //
-                // - mkl
-                //   - include      <- lib.include_paths detects this
-                //   - lib/intel64
-                let path = lib.include_paths[0].join("../lib/intel64");
-                if path.join(&core).exists() {
-                    return Ok(Self {
-                        config,
-                        path: path.canonicalize()?.clone(),
-                    });
-                }
+
+            // assumes following directory structure:
+            //
+            // - mkl
+            //   - include      <- lib.include_paths detects this
+            //   - lib/intel64
+            for path in lib.include_paths {
+                targets.seek(&path.join("../lib/intel64"));
             }
-            warn!(
-                "No link path exists in pkg-config entry of {}",
-                config.name()
-            );
         }
 
         // XDG_DATA_HOME
         let path = xdg_home_path().join(config.name());
-        if path.exists() && path.join(&core).exists() {
-            return Ok(Self { config, path });
-        }
+        targets.seek(&path);
 
-        // None found
-        bail!("No library found for {}", config.name());
+        if targets.found_all() {
+            return Ok(Self { config, targets });
+        } else {
+            // None found
+            bail!("No library found for {}", config.name());
+        }
     }
 
     pub fn name(&self) -> String {
         self.config.name()
     }
 
-    pub fn path(&self) -> &Path {
-        &self.path
+    pub fn targets(&self) -> &Targets {
+        &self.targets
     }
 
     pub fn available() -> Vec<Self> {
@@ -100,25 +115,15 @@ impl LinkConfig {
     }
 
     pub fn print_cargo_metadata(&self) {
-        println!("cargo:rustc-link-search={}", self.path.display());
+        for path in self.targets.paths() {
+            println!("cargo:rustc-link-search={}", path.display());
+        }
         for lib in self.config.libs() {
             match self.config.link {
                 Link::Static => {
-                    let path =
-                        self.path
-                            .join(format!("{}{}.{}", mkl::PREFIX, lib, mkl::EXTENSION_STATIC));
-                    if !path.exists() {
-                        panic!("Static library not found: {}", path.display());
-                    }
                     println!("cargo:rustc-link-lib=static={}", lib);
                 }
                 Link::Shared => {
-                    let path =
-                        self.path
-                            .join(format!("{}{}.{}", mkl::PREFIX, lib, mkl::EXTENSION_SHARED));
-                    if !path.exists() {
-                        panic!("Shared library not found: {}", path.display());
-                    }
                     println!("cargo:rustc-link-lib=shared={}", lib);
                 }
             }
@@ -139,14 +144,5 @@ mod tests {
     #[test]
     fn with_mkl_availables() {
         assert_eq!(LinkConfig::available().len(), 8);
-    }
-
-    #[ignore]
-    #[test]
-    fn with_mkl_print_cargo_metadata() {
-        for cfg in LinkConfig::available() {
-            // check asserts
-            cfg.print_cargo_metadata();
-        }
     }
 }

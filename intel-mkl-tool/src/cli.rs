@@ -41,8 +41,10 @@ fn main() -> Result<()> {
 
         Opt::Seek {} => {
             for lib in LinkConfig::available() {
-                // len("mkl-dynamic-ilp64-iomp") == 22
-                println!("{:<22} at {}", lib.name(), lib.path().display());
+                println!("{}", lib.name());
+                for (name, path) in lib.targets().iter() {
+                    println!("  {:<25} at {}", name, path.as_ref().unwrap().display());
+                }
             }
         }
 
