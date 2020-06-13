@@ -67,7 +67,7 @@ pub fn package(mkl_path: &Path) -> Result<()> {
     create_archive(
         &glob(
             mkl_path
-                .join(format!("lib/intel64/*.{}", mkl::EXT))
+                .join(format!("lib/intel64/*.{}", mkl::EXTENSION_SHARED))
                 .to_str()
                 .unwrap(),
         )?
