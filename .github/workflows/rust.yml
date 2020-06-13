@@ -43,6 +43,15 @@ jobs:
         command: test
         args: --manifest-path=${{ matrix.target }}/Cargo.toml
 
+  linux-with-mkl:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: Test with mkl-rust container
+      run: |
+        cd intel-mkl-tool
+        ./docker-test.sh
+
   check-format:
     runs-on: ubuntu-18.04
     steps:

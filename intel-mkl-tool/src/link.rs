@@ -142,3 +142,15 @@ impl LinkConfig {
         Ok((static_libs, shared_libs))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test all available MKL are detected
+    #[ignore]
+    #[test]
+    fn with_mkl_availables() {
+        assert_eq!(LinkConfig::available().len(), 8);
+    }
+}
