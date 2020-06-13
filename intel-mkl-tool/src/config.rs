@@ -1,6 +1,5 @@
 use anyhow::*;
 use derive_more::Display;
-use std::path::*;
 
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
@@ -84,11 +83,6 @@ impl Config {
     /// identifier used in pkg-config
     pub fn name(&self) -> String {
         format!("mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
-    }
-
-    /// Download MKL archive and cache into $XDG_DATA_HOME
-    pub fn download(&self) -> PathBuf {
-        todo!()
     }
 }
 

@@ -99,20 +99,22 @@ impl LinkConfig {
             .collect()
     }
 
-    pub fn print_cargo_metadata(&self) -> Result<()> {
-        let (_static, _shared) = self.libs()?;
+    pub fn print_cargo_metadata(&self) {
+        let (_static, _shared) = self.libs();
         todo!()
     }
 
     /// Static and shared library lists to be linked
-    fn libs(&self) -> Result<(Vec<PathBuf>, Vec<String>)> {
-        // FIXME this implementation is for Linux, fix for Windows and macOS
+    fn libs(&self) -> (Vec<PathBuf>, Vec<String>) {
         let mut static_libs = Vec::new();
         let mut shared_libs = vec!["pthread".into(), "m".into(), "dl".into()];
 
         let mut add = |name: &str| match self.config.link {
             Link::Static => {
-                let path = self.path.join(format!("lib{}.a", name));
+                let path =
+                    self.path
+                        .join(format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC));
+                // this existance must be ensured by previous step
                 assert!(path.exists());
                 static_libs.push(path);
             }
@@ -139,7 +141,7 @@ impl LinkConfig {
                 add("mkl_sequential");
             }
         };
-        Ok((static_libs, shared_libs))
+        (static_libs, shared_libs)
     }
 }
 
