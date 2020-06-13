@@ -11,8 +11,8 @@ impl Targets {
         let mut targets: HashMap<String, Option<PathBuf>> = HashMap::new();
         for name in config.libs() {
             let target = match config.link {
-                Link::Static => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC),
-                Link::Shared => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
+                LinkType::Static => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC),
+                LinkType::Shared => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
             };
             targets.insert(target, None);
         }
@@ -120,10 +120,10 @@ impl LinkConfig {
         }
         for lib in self.config.libs() {
             match self.config.link {
-                Link::Static => {
+                LinkType::Static => {
                     println!("cargo:rustc-link-lib=static={}", lib);
                 }
-                Link::Shared => {
+                LinkType::Shared => {
                     println!("cargo:rustc-link-lib=shared={}", lib);
                 }
             }
