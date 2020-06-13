@@ -84,6 +84,30 @@ impl Config {
     pub fn name(&self) -> String {
         format!("mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
     }
+
+    /// Common components
+    pub fn libs(&self) -> Vec<String> {
+        let mut libs = Vec::new();
+        libs.push("mkl_core".into());
+        match self.index_size {
+            IndexSize::LP64 => {
+                libs.push("mkl_intel_lp64".into());
+            }
+            IndexSize::ILP64 => {
+                libs.push("mkl_intel_ilp64".into());
+            }
+        };
+        match self.parallel {
+            Parallel::OpenMP => {
+                libs.push("iomp5".into());
+                libs.push("mkl_intel_thread".into());
+            }
+            Parallel::Sequential => {
+                libs.push("mkl_sequential".into());
+            }
+        };
+        libs
+    }
 }
 
 #[cfg(test)]

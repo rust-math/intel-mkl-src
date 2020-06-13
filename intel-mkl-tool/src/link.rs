@@ -100,48 +100,33 @@ impl LinkConfig {
     }
 
     pub fn print_cargo_metadata(&self) {
-        let (_static, _shared) = self.libs();
-        todo!()
-    }
+        println!("cargo:rustc-link-search={}", self.path.display());
+        for lib in self.config.libs() {
+            match self.config.link {
+                Link::Static => {
+                    let path =
+                        self.path
+                            .join(format!("{}{}.{}", mkl::PREFIX, lib, mkl::EXTENSION_STATIC));
+                    if !path.exists() {
+                        panic!("Static library not found: {}", path.display());
+                    }
+                    println!("cargo:rustc-link-lib=static={}", lib);
+                }
+                Link::Shared => {
+                    let path =
+                        self.path
+                            .join(format!("{}{}.{}", mkl::PREFIX, lib, mkl::EXTENSION_SHARED));
+                    if !path.exists() {
+                        panic!("Shared library not found: {}", path.display());
+                    }
+                    println!("cargo:rustc-link-lib=shared={}", lib);
+                }
+            }
+        }
 
-    /// Static and shared library lists to be linked
-    fn libs(&self) -> (Vec<PathBuf>, Vec<String>) {
-        let mut static_libs = Vec::new();
-        let mut shared_libs = vec!["pthread".into(), "m".into(), "dl".into()];
-
-        let mut add = |name: &str| match self.config.link {
-            Link::Static => {
-                let path =
-                    self.path
-                        .join(format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC));
-                // this existance must be ensured by previous step
-                assert!(path.exists());
-                static_libs.push(path);
-            }
-            Link::Shared => {
-                shared_libs.push(name.to_string());
-            }
-        };
-
-        add("mkl_core");
-        match self.config.index_size {
-            IndexSize::LP64 => {
-                add("mkl_intel_lp64");
-            }
-            IndexSize::ILP64 => {
-                add("mkl_intel_ilp64");
-            }
-        };
-        match self.config.parallel {
-            Parallel::OpenMP => {
-                add("iomp5");
-                add("mkl_intel_thread");
-            }
-            Parallel::Sequential => {
-                add("mkl_sequential");
-            }
-        };
-        (static_libs, shared_libs)
+        for common in &["pthread", "m", "dl"] {
+            println!("cargo:rustc-link-lib=dylib={}", common);
+        }
     }
 }
 
@@ -154,5 +139,14 @@ mod tests {
     #[test]
     fn with_mkl_availables() {
         assert_eq!(LinkConfig::available().len(), 8);
+    }
+
+    #[ignore]
+    #[test]
+    fn with_mkl_print_cargo_metadata() {
+        for cfg in LinkConfig::available() {
+            // check asserts
+            cfg.print_cargo_metadata();
+        }
     }
 }
