@@ -13,7 +13,7 @@ pub const VALID_CONFIGS: &[&str] = &[
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Display)]
-pub enum Link {
+pub enum LinkType {
     #[display(fmt = "static")]
     Static,
     #[display(fmt = "dynamic")]
@@ -21,7 +21,7 @@ pub enum Link {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Display)]
-pub enum IndexSize {
+pub enum Interface {
     #[display(fmt = "lp64")]
     LP64,
     #[display(fmt = "ilp64")]
@@ -29,7 +29,7 @@ pub enum IndexSize {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Display)]
-pub enum Parallel {
+pub enum Threading {
     #[display(fmt = "iomp")]
     OpenMP,
     #[display(fmt = "seq")]
@@ -39,9 +39,9 @@ pub enum Parallel {
 /// Configure for linking, downloading and packaging Intel MKL
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Config {
-    pub link: Link,
-    pub index_size: IndexSize,
-    pub parallel: Parallel,
+    pub link: LinkType,
+    pub index_size: Interface,
+    pub parallel: Threading,
 }
 
 impl Config {
@@ -56,20 +56,20 @@ impl Config {
         }
 
         let link = match parts[1] {
-            "static" => Link::Static,
-            "dynamic" => Link::Shared,
+            "static" => LinkType::Static,
+            "dynamic" => LinkType::Shared,
             another => bail!("Invalid link spec: {}", another),
         };
 
         let index_size = match parts[2] {
-            "lp64" => IndexSize::LP64,
-            "ilp64" => IndexSize::ILP64,
+            "lp64" => Interface::LP64,
+            "ilp64" => Interface::ILP64,
             another => bail!("Invalid index spec: {}", another),
         };
 
         let parallel = match parts[3] {
-            "iomp" => Parallel::OpenMP,
-            "seq" => Parallel::Sequential,
+            "iomp" => Threading::OpenMP,
+            "seq" => Threading::Sequential,
             another => bail!("Invalid parallel spec: {}", another),
         };
 
@@ -90,19 +90,19 @@ impl Config {
         let mut libs = Vec::new();
         libs.push("mkl_core".into());
         match self.index_size {
-            IndexSize::LP64 => {
+            Interface::LP64 => {
                 libs.push("mkl_intel_lp64".into());
             }
-            IndexSize::ILP64 => {
+            Interface::ILP64 => {
                 libs.push("mkl_intel_ilp64".into());
             }
         };
         match self.parallel {
-            Parallel::OpenMP => {
+            Threading::OpenMP => {
                 libs.push("iomp5".into());
                 libs.push("mkl_intel_thread".into());
             }
-            Parallel::Sequential => {
+            Threading::Sequential => {
                 libs.push("mkl_sequential".into());
             }
         };
@@ -120,9 +120,9 @@ mod tests {
         assert_eq!(
             cfg,
             Config {
-                link: Link::Static,
-                index_size: IndexSize::LP64,
-                parallel: Parallel::OpenMP
+                link: LinkType::Static,
+                index_size: Interface::LP64,
+                parallel: Threading::OpenMP
             }
         );
         Ok(())
