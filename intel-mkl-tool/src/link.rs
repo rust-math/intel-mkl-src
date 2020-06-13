@@ -52,10 +52,9 @@ impl LinkConfig {
                         config,
                         path: path.clone(),
                     });
-                } else {
-                    warn!("{} not found in {}", &core, path.display());
                 }
-            } else if !lib.include_paths.is_empty() {
+            }
+            if !lib.include_paths.is_empty() {
                 // assumes following directory structure:
                 //
                 // - mkl
@@ -68,12 +67,11 @@ impl LinkConfig {
                         path: path.canonicalize()?.clone(),
                     });
                 }
-            } else {
-                warn!(
-                    "No link path exists in pkg-config entry of {}",
-                    config.name()
-                );
             }
+            warn!(
+                "No link path exists in pkg-config entry of {}",
+                config.name()
+            );
         }
 
         // XDG_DATA_HOME
