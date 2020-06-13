@@ -1,12 +1,18 @@
-REGISTRY := rustmath/mkl
+REGISTRY     := rustmath/mkl-rust
+RUST_VERSION := 1.43.0
+MKL_VERSION  := 2020.1.217
+IMAGE        := $(REGISTRY):$(RUST_VERSION)-$(MKL_VERSION)
 
-all: image
+all: test
 
-image:
-	docker build . -t $(REGISTRY)
+build:
+	docker build .                               \
+		--build-arg "RUST_VERSION=$(RUST_VERSION)" \
+		--build-arg "MKL_VERSION=$(MKL_VERSION)"   \
+		-t $(IMAGE)
 
-push: image
-	docker push $(REGISTRY)
+push: build
+	docker push $(IMAGE)
 
-run: image
-	docker run -it --rm $(REGISTRY)
+test: build
+	docker run -it --rm $(IMAGE) pkg-config --libs mkl-dynamic-lp64-iomp
