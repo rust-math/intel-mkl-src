@@ -45,10 +45,13 @@ jobs:
 
   docker:
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        target: ["test", "seek", "package"]
     steps:
     - uses: actions/checkout@v1
     - name: Test with mkl-rust container
-      run: intel-mkl-tool/docker-test.sh
+      run: make -C intel-mkl-tool ${{ matrix.target }}
 
   check-format:
     runs-on: ubuntu-18.04
