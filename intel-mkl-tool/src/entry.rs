@@ -1,10 +1,14 @@
 use crate::*;
 use anyhow::*;
 use derive_more::Deref;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    io::{self, BufRead},
+};
 
 #[derive(Debug, Deref)]
-pub struct Targets(HashMap<String, Option<PathBuf>>);
+struct Targets(HashMap<String, Option<PathBuf>>);
 
 impl Targets {
     fn new(config: Config) -> Self {
@@ -30,21 +34,16 @@ impl Targets {
             }
         }
     }
-
-    fn paths(&self) -> Vec<PathBuf> {
-        let set: HashSet<PathBuf> = self.0.values().cloned().map(|path| path.unwrap()).collect(); // must be redundant
-        set.into_iter().collect()
-    }
 }
 
 /// Handler for found library
 #[derive(Debug)]
-pub struct LinkConfig {
+pub struct Entry {
     config: Config,
     targets: Targets,
 }
 
-impl LinkConfig {
+impl Entry {
     /// Get the directory where the library exists
     ///
     /// This will seek followings in this order:
@@ -103,8 +102,11 @@ impl LinkConfig {
         self.config.name()
     }
 
-    pub fn targets(&self) -> &Targets {
-        &self.targets
+    pub fn files(&self) -> Vec<(PathBuf, String)> {
+        self.targets
+            .iter()
+            .map(|(name, path)| (path.as_ref().unwrap().clone(), name.clone()))
+            .collect()
     }
 
     pub fn available() -> Vec<Self> {
@@ -114,8 +116,77 @@ impl LinkConfig {
             .collect()
     }
 
+    /// Get MKL version info from its C header
+    ///
+    /// - This will not work for OUT_DIR or XDG_DATA_HOME entry,
+    ///   and returns Error in these cases
+    pub fn version(&self) -> Result<(u32, u32)> {
+        for (path, _) in &self.files() {
+            // assumes following directory structure:
+            //
+            // - mkl
+            //   - include
+            //   - lib/intel64 <- this is cached in targets
+            //
+            let version_header = path.join("../../include/mkl_version.h");
+            if !version_header.exists() {
+                continue;
+            }
+
+            // Extract version info from C header
+            //
+            // ```
+            // #define __INTEL_MKL__ 2020
+            // #define __INTEL_MKL_MINOR__ 0
+            // #define __INTEL_MKL_UPDATE__ 1
+            // ```
+            let f = fs::File::open(version_header)?;
+            let f = io::BufReader::new(f);
+            let mut year = 0;
+            let mut update = 0;
+            for line in f.lines() {
+                if let Ok(line) = line {
+                    if !line.starts_with("#define") {
+                        continue;
+                    }
+                    let ss: Vec<&str> = line.split(" ").collect();
+                    match ss[1] {
+                        "__INTEL_MKL__" => year = ss[2].parse()?,
+                        "__INTEL_MKL_UPDATE__" => update = ss[2].parse()?,
+                        _ => continue,
+                    }
+                }
+            }
+            if year > 0 && update > 0 {
+                return Ok((year, update));
+            }
+        }
+        bail!("Cannot determine MKL versions");
+    }
+
+    pub fn package(&self, out_dir: &Path) -> Result<PathBuf> {
+        fs::create_dir_all(out_dir)?;
+        let out = out_dir.join(format!("{}.tar.zst", self.name()));
+        if out.exists() {
+            bail!("Output archive already exits: {}", out.display());
+        }
+        let f = fs::File::create(&out)?;
+        let buf = io::BufWriter::new(f);
+        let zstd = zstd::stream::write::Encoder::new(buf, 6)?;
+        let mut ar = tar::Builder::new(zstd);
+        ar.mode(tar::HeaderMode::Deterministic);
+        for (path, name) in self.files() {
+            let lib = path.join(&name);
+            ar.append_path_with_name(lib, name)?;
+        }
+        let zstd = ar.into_inner()?;
+        zstd.finish()?;
+        Ok(out)
+    }
+
     pub fn print_cargo_metadata(&self) {
-        for path in self.targets.paths() {
+        let paths: HashSet<PathBuf> = self.files().into_iter().map(|(path, _name)| path).collect(); // must be redundant
+        for path in paths {
             println!("cargo:rustc-link-search={}", path.display());
         }
         for lib in self.config.libs() {
@@ -143,6 +214,14 @@ mod tests {
     #[ignore]
     #[test]
     fn with_mkl_availables() {
-        assert_eq!(LinkConfig::available().len(), 8);
+        assert_eq!(Entry::available().len(), 8);
+    }
+
+    #[ignore]
+    #[test]
+    fn with_mkl_version() {
+        for entry in Entry::available() {
+            let _version = entry.version().unwrap();
+        }
     }
 }

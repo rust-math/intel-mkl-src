@@ -1,5 +1,6 @@
 use anyhow::*;
 use intel_mkl_tool::*;
+use log::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
 
@@ -20,7 +21,10 @@ enum Opt {
     Seek {},
 
     /// Package Intel MKL libraries into an archive
-    Package { path: PathBuf },
+    Package {
+        name: Option<String>,
+        out: Option<PathBuf>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -40,16 +44,41 @@ fn main() -> Result<()> {
         }
 
         Opt::Seek {} => {
-            for lib in LinkConfig::available() {
-                println!("{}", lib.name());
-                for (name, path) in lib.targets().iter() {
-                    println!("  {:<25} at {}", name, path.as_ref().unwrap().display());
+            for lib in Entry::available() {
+                if let Ok(version) = lib.version() {
+                    println!("{:<22}: {}.{}", lib.name(), version.0, version.1);
+                } else {
+                    println!("{:<22}", lib.name());
+                }
+                for (path, name) in &lib.files() {
+                    println!("  {:<25} at {}", name, path.display());
                 }
             }
         }
 
-        Opt::Package { path } => {
-            let _out = package(&path)?;
+        Opt::Package { name, out } => {
+            let out = out.unwrap_or(env::current_dir().unwrap());
+            if let Some(name) = name {
+                let cfg = Config::from_str(&name)?;
+                let entry = Entry::from_config(cfg)?;
+                let out = if let Ok(version) = entry.version() {
+                    out.join(format!("{}.{}", version.0, version.1))
+                } else {
+                    out
+                };
+                let package = entry.package(&out)?;
+                info!("Pacakge created: {}", package.display());
+            } else {
+                for entry in Entry::available() {
+                    let out = if let Ok(version) = entry.version() {
+                        out.join(format!("{}.{}", version.0, version.1))
+                    } else {
+                        out.clone()
+                    };
+                    let package = entry.package(&out)?;
+                    info!("Pacakge created: {}", package.display());
+                }
+            }
         }
     }
     Ok(())
