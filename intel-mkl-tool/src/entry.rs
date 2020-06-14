@@ -39,12 +39,12 @@ impl Targets {
 
 /// Handler for found library
 #[derive(Debug)]
-pub struct LinkConfig {
+pub struct Entry {
     config: Config,
     targets: Targets,
 }
 
-impl LinkConfig {
+impl Entry {
     /// Get the directory where the library exists
     ///
     /// This will seek followings in this order:
@@ -143,6 +143,6 @@ mod tests {
     #[ignore]
     #[test]
     fn with_mkl_availables() {
-        assert_eq!(LinkConfig::available().len(), 8);
+        assert_eq!(Entry::available().len(), 8);
     }
 }

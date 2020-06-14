@@ -40,7 +40,7 @@ fn main() -> Result<()> {
         }
 
         Opt::Seek {} => {
-            for lib in LinkConfig::available() {
+            for lib in Entry::available() {
                 println!("{}", lib.name());
                 for (name, path) in lib.targets().iter() {
                     println!("  {:<25} at {}", name, path.as_ref().unwrap().display());
