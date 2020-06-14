@@ -41,7 +41,11 @@ fn main() -> Result<()> {
 
         Opt::Seek {} => {
             for lib in Entry::available() {
-                println!("{}", lib.name());
+                if let Ok(version) = lib.version() {
+                    println!("{:<22}: {}.{}", lib.name(), version.0, version.1);
+                } else {
+                    println!("{:<22}", lib.name());
+                }
                 for (path, name) in &lib.files() {
                     println!("  {:<25} at {}", name, path.display());
                 }

@@ -4,12 +4,10 @@ use std::path::*;
 mod config;
 mod download;
 mod entry;
-mod package;
 
 pub use config::*;
 pub use download::*;
 pub use entry::*;
-pub use package::*;
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 

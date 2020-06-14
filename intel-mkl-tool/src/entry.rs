@@ -3,7 +3,8 @@ use anyhow::*;
 use derive_more::Deref;
 use std::{
     collections::{HashMap, HashSet},
-    fs, io,
+    fs,
+    io::{self, BufRead},
 };
 
 #[derive(Debug, Deref)]
@@ -113,6 +114,54 @@ impl Entry {
             .iter()
             .flat_map(|name| Self::from_config(Config::from_str(name).unwrap()))
             .collect()
+    }
+
+    /// Get MKL version info from its C header
+    ///
+    /// - This will not work for OUT_DIR or XDG_DATA_HOME entry,
+    ///   and returns Error in these cases
+    pub fn version(&self) -> Result<(u32, u32)> {
+        for (path, _) in &self.files() {
+            // assumes following directory structure:
+            //
+            // - mkl
+            //   - include
+            //   - lib/intel64 <- this is cached in targets
+            //
+            let version_header = path.join("../../include/mkl_version.h");
+            if !version_header.exists() {
+                continue;
+            }
+
+            // Extract version info from C header
+            //
+            // ```
+            // #define __INTEL_MKL__ 2020
+            // #define __INTEL_MKL_MINOR__ 0
+            // #define __INTEL_MKL_UPDATE__ 1
+            // ```
+            let f = fs::File::open(version_header)?;
+            let f = io::BufReader::new(f);
+            let mut year = 0;
+            let mut update = 0;
+            for line in f.lines() {
+                if let Ok(line) = line {
+                    if !line.starts_with("#define") {
+                        continue;
+                    }
+                    let ss: Vec<&str> = line.split(" ").collect();
+                    match ss[1] {
+                        "__INTEL_MKL__" => year = ss[2].parse()?,
+                        "__INTEL_MKL_UPDATE__" => update = ss[2].parse()?,
+                        _ => continue,
+                    }
+                }
+            }
+            if year > 0 && update > 0 {
+                return Ok((year, update));
+            }
+        }
+        bail!("Cannot determine MKL versions");
     }
 
     pub fn package(&self, out_dir: &Path) -> Result<PathBuf> {
