@@ -165,6 +165,7 @@ impl Entry {
     }
 
     pub fn package(&self, out_dir: &Path) -> Result<PathBuf> {
+        fs::create_dir_all(out_dir)?;
         let out = out_dir.join(format!("{}.tar.zst", self.name()));
         if out.exists() {
             bail!("Output archive already exits: {}", out.display());

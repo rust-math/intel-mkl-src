@@ -1,5 +1,6 @@
 use anyhow::*;
 use intel_mkl_tool::*;
+use log::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
 
@@ -20,7 +21,10 @@ enum Opt {
     Seek {},
 
     /// Package Intel MKL libraries into an archive
-    Package { name: String, out: Option<PathBuf> },
+    Package {
+        name: Option<String>,
+        out: Option<PathBuf>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -54,9 +58,27 @@ fn main() -> Result<()> {
 
         Opt::Package { name, out } => {
             let out = out.unwrap_or(env::current_dir().unwrap());
-            let cfg = Config::from_str(&name)?;
-            let entry = Entry::from_config(cfg)?;
-            let _out = entry.package(&out)?;
+            if let Some(name) = name {
+                let cfg = Config::from_str(&name)?;
+                let entry = Entry::from_config(cfg)?;
+                let out = if let Ok(version) = entry.version() {
+                    out.join(format!("{}.{}", version.0, version.1))
+                } else {
+                    out
+                };
+                let package = entry.package(&out)?;
+                info!("Pacakge created: {}", package.display());
+            } else {
+                for entry in Entry::available() {
+                    let out = if let Ok(version) = entry.version() {
+                        out.join(format!("{}.{}", version.0, version.1))
+                    } else {
+                        out.clone()
+                    };
+                    let package = entry.package(&out)?;
+                    info!("Pacakge created: {}", package.display());
+                }
+            }
         }
     }
     Ok(())
