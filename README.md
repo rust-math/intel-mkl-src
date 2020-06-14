@@ -1,5 +1,4 @@
 # intel-mkl-src
-[![Build Status](https://dev.azure.com/rust-math/intel-mkl-src/_apis/build/status/rust-math.intel-mkl-src?branchName=master)](https://dev.azure.com/rust-math/intel-mkl-src/_build/latest?definitionId=1&branchName=master)
 
 |crate | crate.io | description |
 |:-----|:--------:|:------------|
