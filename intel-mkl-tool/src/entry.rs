@@ -216,4 +216,12 @@ mod tests {
     fn with_mkl_availables() {
         assert_eq!(Entry::available().len(), 8);
     }
+
+    #[ignore]
+    #[test]
+    fn with_mkl_version() {
+        for entry in Entry::available() {
+            let _version = entry.version().unwrap();
+        }
+    }
 }
