@@ -1,10 +1,13 @@
 use crate::*;
 use anyhow::*;
 use derive_more::Deref;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    fs, io,
+};
 
 #[derive(Debug, Deref)]
-pub struct Targets(HashMap<String, Option<PathBuf>>);
+struct Targets(HashMap<String, Option<PathBuf>>);
 
 impl Targets {
     fn new(config: Config) -> Self {
@@ -29,11 +32,6 @@ impl Targets {
                 value.get_or_insert(dir.canonicalize().unwrap());
             }
         }
-    }
-
-    fn paths(&self) -> Vec<PathBuf> {
-        let set: HashSet<PathBuf> = self.0.values().cloned().map(|path| path.unwrap()).collect(); // must be redundant
-        set.into_iter().collect()
     }
 }
 
@@ -103,8 +101,11 @@ impl Entry {
         self.config.name()
     }
 
-    pub fn targets(&self) -> &Targets {
-        &self.targets
+    pub fn files(&self) -> Vec<(PathBuf, String)> {
+        self.targets
+            .iter()
+            .map(|(name, path)| (path.as_ref().unwrap().clone(), name.clone()))
+            .collect()
     }
 
     pub fn available() -> Vec<Self> {
@@ -114,8 +115,28 @@ impl Entry {
             .collect()
     }
 
+    pub fn package(&self, out_dir: &Path) -> Result<PathBuf> {
+        let out = out_dir.join(format!("{}.tar.zst", self.name()));
+        if out.exists() {
+            bail!("Output archive already exits: {}", out.display());
+        }
+        let f = fs::File::create(&out)?;
+        let buf = io::BufWriter::new(f);
+        let zstd = zstd::stream::write::Encoder::new(buf, 6)?;
+        let mut ar = tar::Builder::new(zstd);
+        ar.mode(tar::HeaderMode::Deterministic);
+        for (path, name) in self.files() {
+            let lib = path.join(&name);
+            ar.append_path_with_name(lib, name)?;
+        }
+        let zstd = ar.into_inner()?;
+        zstd.finish()?;
+        Ok(out)
+    }
+
     pub fn print_cargo_metadata(&self) {
-        for path in self.targets.paths() {
+        let paths: HashSet<PathBuf> = self.files().into_iter().map(|(path, _name)| path).collect(); // must be redundant
+        for path in paths {
             println!("cargo:rustc-link-search={}", path.display());
         }
         for lib in self.config.libs() {

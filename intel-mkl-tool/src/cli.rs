@@ -20,7 +20,7 @@ enum Opt {
     Seek {},
 
     /// Package Intel MKL libraries into an archive
-    Package { path: PathBuf },
+    Package { name: String, out: Option<PathBuf> },
 }
 
 fn main() -> Result<()> {
@@ -42,14 +42,17 @@ fn main() -> Result<()> {
         Opt::Seek {} => {
             for lib in Entry::available() {
                 println!("{}", lib.name());
-                for (name, path) in lib.targets().iter() {
-                    println!("  {:<25} at {}", name, path.as_ref().unwrap().display());
+                for (path, name) in &lib.files() {
+                    println!("  {:<25} at {}", name, path.display());
                 }
             }
         }
 
-        Opt::Package { path } => {
-            let _out = package(&path)?;
+        Opt::Package { name, out } => {
+            let out = out.unwrap_or(env::current_dir().unwrap());
+            let cfg = Config::from_str(&name)?;
+            let entry = Entry::from_config(cfg)?;
+            let _out = entry.package(&out)?;
         }
     }
     Ok(())
