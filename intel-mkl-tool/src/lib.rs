@@ -59,7 +59,7 @@ pub fn xdg_home_path() -> PathBuf {
 }
 
 pub fn seek_pkg_config() -> Option<PathBuf> {
-    if let Ok(lib) = pkg_config::probe_library("mkl-dynamic-lp64-iomp") {
+    if let Ok(lib) = pkg_config::probe_library("mkl-dynamic-lp64-seq") {
         if lib.libs.len() > 1 {
             warn!("Found {} MKL libraries. Use first found.", lib.libs.len())
         }
@@ -69,7 +69,7 @@ pub fn seek_pkg_config() -> Option<PathBuf> {
 }
 
 pub fn download_default<P: AsRef<Path>>(out_dir: P) -> Result<()> {
-    let cfg = Config::from_str("mkl-dynamic-lp64-iomp").unwrap();
+    let cfg = Config::from_str("mkl-dynamic-lp64-seq").unwrap();
     cfg.download(out_dir)?;
     Ok(())
 }
