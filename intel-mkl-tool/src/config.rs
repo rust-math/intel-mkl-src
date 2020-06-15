@@ -137,6 +137,7 @@ impl Config {
 /// - This function expands obtained data into memory space
 ///
 fn read_from_url(url: &str) -> Result<Vec<u8>> {
+    info!("Downalod {}", url);
     let mut data = Vec::new();
     let mut handle = Easy::new();
     handle.fail_on_error(true)?;

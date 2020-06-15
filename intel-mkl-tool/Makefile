@@ -13,4 +13,4 @@ package:
 	docker run $(DOCKER_OPTION) $(IMAGE) cargo run --release -- package
 
 download:
-	docker run $(DOCKER_OPTION) $(IMAGE) cargo run --release -- download
+	docker run $(DOCKER_OPTION) $(IMAGE) cargo run --release -- download -o ./test_download
