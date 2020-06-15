@@ -119,14 +119,11 @@ impl Config {
         libs
     }
 
-    /// Download archive from AWS S3, and expand into `${out_dir}/${self.name()}/*.so`
+    /// Download archive from AWS S3, and expand into `${out_dir}/*.so`
     pub fn download(&self, out_dir: &Path) -> Result<()> {
-        let out_dir = out_dir.join(self.name());
         if out_dir.exists() {
-            bail!("Already exists: {}", out_dir.display());
+            fs::create_dir_all(&out_dir)?;
         }
-        fs::create_dir_all(&out_dir)?;
-
         let data = read_from_url(&format!("{}/{}.tar.zst", s3_addr(), self.name()))?;
         let zstd = zstd::stream::read::Decoder::new(data.as_slice())?;
         let mut arc = tar::Archive::new(zstd);

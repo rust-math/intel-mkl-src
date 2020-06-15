@@ -44,7 +44,7 @@ fn main() -> Result<()> {
             let path = path.unwrap_or(xdg_home_path());
             if let Some(name) = name {
                 let cfg = Config::from_str(&name)?;
-                cfg.download(&path)?;
+                cfg.download(&path.join(cfg.name()))?;
             } else {
                 for cfg in Config::possible() {
                     info!(
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
                         cfg.name(),
                         path.display()
                     );
-                    cfg.download(&path)?;
+                    cfg.download(&path.join(cfg.name()))?;
                 }
             }
         }
