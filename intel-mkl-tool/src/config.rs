@@ -1,5 +1,8 @@
+use crate::*;
 use anyhow::*;
-use derive_more::Display;
+use curl::easy::Easy;
+use derive_more::*;
+use std::fs;
 
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
@@ -115,6 +118,43 @@ impl Config {
         };
         libs
     }
+
+    /// Download archive from AWS S3, and expand into `${out_dir}/${self.name()}/*.so`
+    pub fn download(&self, out_dir: &Path) -> Result<()> {
+        let out_dir = out_dir.join(self.name());
+        if out_dir.exists() {
+            bail!("Already exists: {}", out_dir.display());
+        }
+        fs::create_dir_all(&out_dir)?;
+
+        let data = read_from_url(&format!("{}/{}.tar.zst", s3_addr(), self.name()))?;
+        let zstd = zstd::stream::read::Decoder::new(data.as_slice())?;
+        let mut arc = tar::Archive::new(zstd);
+        arc.unpack(&out_dir)?;
+        Ok(())
+    }
+}
+
+/// Helper for download file from URL
+///
+/// - This function expands obtained data into memory space
+///
+fn read_from_url(url: &str) -> Result<Vec<u8>> {
+    let mut data = Vec::new();
+    let mut handle = Easy::new();
+    handle.fail_on_error(true)?;
+    handle.url(url)?;
+    {
+        let mut transfer = handle.transfer();
+        transfer
+            .write_function(|new_data| {
+                data.extend_from_slice(new_data);
+                Ok(new_data.len())
+            })
+            .unwrap();
+        transfer.perform().unwrap();
+    }
+    Ok(data)
 }
 
 #[cfg(test)]

@@ -9,7 +9,9 @@ use structopt::StructOpt;
 enum Opt {
     /// Download Intel-MKL library
     Download {
-        /// Install destination. Default is `$XDG_DATA_HOME/intel-mkl-tool`
+        /// Archive name, e.g. "mkl-static-lp64-iomp". Download all archives if None
+        name: Option<String>,
+        /// Install destination. Default is `$XDG_DATA_HOME/intel-mkl-tool/${MKL_VERSION}/`
         path: Option<PathBuf>,
     },
 
@@ -34,13 +36,21 @@ fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     match opt {
-        Opt::Download { path } => {
-            let path = if let Some(path) = path {
-                path
+        Opt::Download { name, path } => {
+            let path = path.unwrap_or(xdg_home_path());
+            if let Some(name) = name {
+                let cfg = Config::from_str(&name)?;
+                cfg.download(&path)?;
             } else {
-                xdg_home_path()
-            };
-            download_default(&path)?;
+                for cfg in Config::possible() {
+                    info!(
+                        "Download archive {:<22} into {}",
+                        cfg.name(),
+                        path.display()
+                    );
+                    cfg.download(&path)?;
+                }
+            }
         }
 
         Opt::Seek {} => {
