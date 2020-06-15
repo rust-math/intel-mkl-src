@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        target: ["test", "seek", "package"]
+        target: ["test", "seek", "package", "download"]
     steps:
     - uses: actions/checkout@v1
     - name: Test with mkl-rust container
