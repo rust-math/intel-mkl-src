@@ -1,12 +1,11 @@
+use anyhow::*;
 use log::*;
 use std::path::*;
 
 mod config;
-mod download;
 mod entry;
 
 pub use config::*;
-pub use download::*;
 pub use entry::*;
 
 const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
@@ -14,7 +13,6 @@ const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-inte
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod mkl {
     pub const OS: &str = "linux";
-    pub const ARCHIVE: &'static str = "mkl_linux64";
     pub const EXTENSION_STATIC: &'static str = "a";
     pub const EXTENSION_SHARED: &'static str = "so";
     pub const PREFIX: &'static str = "lib";
@@ -25,7 +23,6 @@ mod mkl {
 #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
 mod mkl {
     pub const OS: &str = "macos";
-    pub const ARCHIVE: &'static str = "mkl_macos64";
     pub const EXTENSION_STATIC: &'static str = "a";
     pub const EXTENSION_SHARED: &'static str = "dylib";
     pub const PREFIX: &'static str = "lib";
@@ -36,7 +33,6 @@ mod mkl {
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 mod mkl {
     pub const OS: &str = "windows";
-    pub const ARCHIVE: &'static str = "mkl_windows64";
     pub const EXTENSION_STATIC: &'static str = "lib";
     pub const EXTENSION_SHARED: &'static str = "lib";
     pub const PREFIX: &'static str = "";
@@ -49,15 +45,6 @@ fn s3_addr() -> String {
         "{}/{}/{}.{}",
         S3_ADDR,
         mkl::OS,
-        mkl::VERSION_YEAR,
-        mkl::VERSION_UPDATE
-    )
-}
-
-pub fn archive_filename() -> String {
-    format!(
-        "{}_{}_{}.tar.zst",
-        mkl::ARCHIVE,
         mkl::VERSION_YEAR,
         mkl::VERSION_UPDATE
     )
@@ -81,10 +68,19 @@ pub fn seek_pkg_config() -> Option<PathBuf> {
     None
 }
 
-pub fn seek_home() -> Option<PathBuf> {
-    let home_lib = xdg_home_path();
-    if home_lib.is_dir() {
-        return Some(home_lib);
+pub fn download_default<P: AsRef<Path>>(out_dir: P) -> Result<()> {
+    let cfg = Config::from_str("mkl-dynamic-lp64-iomp").unwrap();
+    cfg.download(out_dir)?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn download() -> Result<()> {
+        download_default("./test_download")?;
+        Ok(())
     }
-    None
 }

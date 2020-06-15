@@ -1,5 +1,4 @@
 use crate::*;
-use anyhow::*;
 use curl::easy::Easy;
 use derive_more::*;
 use std::fs;
@@ -120,7 +119,8 @@ impl Config {
     }
 
     /// Download archive from AWS S3, and expand into `${out_dir}/*.so`
-    pub fn download(&self, out_dir: &Path) -> Result<()> {
+    pub fn download<P: AsRef<Path>>(&self, out_dir: P) -> Result<()> {
+        let out_dir = out_dir.as_ref();
         if out_dir.exists() {
             fs::create_dir_all(&out_dir)?;
         }
