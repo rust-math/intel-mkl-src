@@ -80,6 +80,13 @@ impl Config {
         })
     }
 
+    pub fn possible() -> Vec<Self> {
+        VALID_CONFIGS
+            .iter()
+            .map(|name| Self::from_str(name).unwrap())
+            .collect()
+    }
+
     /// identifier used in pkg-config
     pub fn name(&self) -> String {
         format!("mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
