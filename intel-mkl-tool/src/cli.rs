@@ -46,7 +46,7 @@ fn main() -> Result<()> {
                 let cfg = Config::from_str(&name)?;
                 cfg.download(&path.join(cfg.name()))?;
             } else {
-                for cfg in Config::possible() {
+                for cfg in Config::possibles() {
                     info!(
                         "Download archive {:<22} into {}",
                         cfg.name(),
