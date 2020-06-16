@@ -198,7 +198,7 @@ impl Entry {
                     println!("cargo:rustc-link-lib=static={}", lib);
                 }
                 LinkType::Shared => {
-                    println!("cargo:rustc-link-lib=shared={}", lib);
+                    println!("cargo:rustc-link-lib=dylib={}", lib);
                 }
             }
         }
