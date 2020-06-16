@@ -108,6 +108,28 @@ impl Config {
         };
         libs
     }
+
+    /// Dynamically loaded libraries, e.g. `libmkl_vml_avx2.so`
+    ///
+    /// - MKL seeks additional shared library **on runtime**.
+    ///   This function lists these files for packaging.
+    pub fn additional_libs(&self) -> Vec<String> {
+        match self.link {
+            LinkType::Static => Vec::new(),
+            LinkType::Shared => {
+                let mut libs = Vec::new();
+                for prefix in &["mkl", "mkl_vml"] {
+                    for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
+                        libs.push(format!("{}_{}", prefix, suffix));
+                    }
+                }
+                libs.push("mkl_rt".into());
+                libs.push("mkl_vml_mc2".into());
+                libs.push("mkl_vml_cmpt".into());
+                libs
+            }
+        }
+    }
 }
 
 #[cfg(test)]
