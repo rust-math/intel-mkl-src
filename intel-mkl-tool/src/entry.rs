@@ -13,7 +13,11 @@ struct Targets(HashMap<String, Option<PathBuf>>);
 impl Targets {
     fn new(config: Config) -> Self {
         let mut targets: HashMap<String, Option<PathBuf>> = HashMap::new();
-        for name in config.libs() {
+        for name in config
+            .libs()
+            .into_iter()
+            .chain(config.additional_libs().into_iter())
+        {
             let target = match config.link {
                 LinkType::Static => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC),
                 LinkType::Shared => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
