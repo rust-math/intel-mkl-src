@@ -35,6 +35,3 @@ xdg-data-home = []
 [build-dependencies]
 anyhow = "1"
 intel-mkl-tool = { version = "0.1.0", path = "../intel-mkl-tool", default-features = false }
-
-[dev-dependencies]
-libc = "0.2.65"
