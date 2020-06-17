@@ -26,8 +26,14 @@ impl Targets {
         Self(targets)
     }
 
-    fn found_all(&self) -> bool {
-        self.0.iter().all(|(_key, value)| value.is_some())
+    fn found_files(&self) -> Vec<(PathBuf, String)> {
+        self.iter()
+            .flat_map(|(name, path)| Some((path.as_ref()?.clone(), name.clone())))
+            .collect()
+    }
+
+    fn found_any(&self) -> bool {
+        self.0.iter().any(|(_key, value)| value.is_some())
     }
 
     fn seek(&mut self, dir: &Path) {
@@ -93,7 +99,7 @@ impl Entry {
         let path = xdg_home_path().join(config.name());
         targets.seek(&path);
 
-        if targets.found_all() {
+        if targets.found_any() {
             return Ok(Self { config, targets });
         } else {
             // None found
@@ -105,11 +111,8 @@ impl Entry {
         self.config.name()
     }
 
-    pub fn files(&self) -> Vec<(PathBuf, String)> {
-        self.targets
-            .iter()
-            .map(|(name, path)| (path.as_ref().unwrap().clone(), name.clone()))
-            .collect()
+    pub fn found_files(&self) -> Vec<(PathBuf, String)> {
+        self.targets.found_files()
     }
 
     pub fn available() -> Vec<Self> {
@@ -124,7 +127,7 @@ impl Entry {
     /// - This will not work for OUT_DIR or XDG_DATA_HOME entry,
     ///   and returns Error in these cases
     pub fn version(&self) -> Result<(u32, u32)> {
-        for (path, _) in &self.files() {
+        for (path, _) in &self.found_files() {
             // assumes following directory structure:
             //
             // - mkl
@@ -178,7 +181,7 @@ impl Entry {
         let zstd = zstd::stream::write::Encoder::new(buf, 6)?;
         let mut ar = tar::Builder::new(zstd);
         ar.mode(tar::HeaderMode::Deterministic);
-        for (path, name) in self.files() {
+        for (path, name) in self.found_files() {
             let lib = path.join(&name);
             ar.append_path_with_name(lib, name)?;
         }
@@ -188,7 +191,11 @@ impl Entry {
     }
 
     pub fn print_cargo_metadata(&self) {
-        let paths: HashSet<PathBuf> = self.files().into_iter().map(|(path, _name)| path).collect(); // must be redundant
+        let paths: HashSet<PathBuf> = self
+            .found_files()
+            .into_iter()
+            .map(|(path, _name)| path)
+            .collect(); // must be redundant
         for path in paths {
             println!("cargo:rustc-link-search={}", path.display());
         }
