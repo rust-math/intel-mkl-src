@@ -95,9 +95,13 @@ impl Config {
     }
 
     /// Common components
+    ///
+    /// The order must be following (or equivalent libs)
+    ///
+    /// mkl_intel_lp64 > mkl_intel_thread > mkl_core > iomp5
+    ///
     pub fn libs(&self) -> Vec<String> {
         let mut libs = Vec::new();
-        libs.push("mkl_core".into());
         match self.index_size {
             Interface::LP64 => {
                 libs.push("mkl_intel_lp64".into());
@@ -108,13 +112,16 @@ impl Config {
         };
         match self.parallel {
             Threading::OpenMP => {
-                libs.push("iomp5".into());
                 libs.push("mkl_intel_thread".into());
             }
             Threading::Sequential => {
                 libs.push("mkl_sequential".into());
             }
         };
+        libs.push("mkl_core".into());
+        if matches!(self.parallel, Threading::OpenMP) {
+            libs.push("iomp5".into());
+        }
         libs
     }
 
