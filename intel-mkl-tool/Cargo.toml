@@ -28,6 +28,9 @@ zstd = "0.5.1"
 structopt  = { version = "0.3.5", optional = true }
 env_logger = { version = "0.7.1", optional = true }
 
+[dev-dependencies]
+paste = "*"
+
 [[bin]]
 name = "intel-mkl-tool"
 path = "src/cli.rs"

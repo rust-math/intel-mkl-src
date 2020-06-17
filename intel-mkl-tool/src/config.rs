@@ -220,4 +220,35 @@ mod tests {
         assert!(Config::from_str("mkl-static-lp64-omp").is_err());
         Ok(())
     }
+
+    macro_rules! impl_test_download {
+        ($name:expr) => {
+            paste::item! {
+                #[test]
+                fn [<download_$name>]() -> Result<()> {
+                    let name = $name;
+                    let cfg = Config::from_str(name)?;
+                    cfg.download(format!("test_download/{}", name))?;
+                    Ok(())
+                }
+            }
+        };
+    }
+
+    mod dynamic {
+        use super::*;
+        impl_test_download!("mkl-dynamic-lp64-seq");
+        impl_test_download!("mkl-dynamic-lp64-iomp");
+        impl_test_download!("mkl-dynamic-ilp64-seq");
+        impl_test_download!("mkl-dynamic-ilp64-iomp");
+    }
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    mod static_ {
+        use super::*;
+        impl_test_download!("mkl-static-lp64-seq");
+        impl_test_download!("mkl-static-lp64-iomp");
+        impl_test_download!("mkl-static-ilp64-seq");
+        impl_test_download!("mkl-static-ilp64-iomp");
+    }
 }
