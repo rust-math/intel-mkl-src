@@ -64,7 +64,7 @@ fn main() -> Result<()> {
                 } else {
                     println!("{:<22}", lib.name());
                 }
-                for (path, name) in &lib.files() {
+                for (path, name) in &lib.found_files() {
                     println!("  {:<25} at {}", name, path.display());
                 }
             }

@@ -14,13 +14,24 @@ build = "build.rs"
 links = "mkl_core"
 
 [features]
-default = []
-use-shared = []
+default = ["download", "mkl-dynamic-lp64-iomp"]
 
-[build-dependencies.intel-mkl-tool]
-version = "0.1.0"
-path = "../intel-mkl-tool"
-default-features = false
+# MKL config
+# https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html
+mkl-static-lp64-iomp   = []
+mkl-static-lp64-seq    = []
+mkl-static-ilp64-iomp  = []
+mkl-static-ilp64-seq   = []
+mkl-dynamic-lp64-iomp  = []
+mkl-dynamic-lp64-seq   = []
+mkl-dynamic-ilp64-iomp = []
+mkl-dynamic-ilp64-seq  = []
 
-[dev-dependencies]
-libc = "0.2.65"
+# Enable downloading from AWS S3 when not found
+download = []
+# (Experimental) Cache download archive ad $XDG_DATA_HOME/intel-mkl-tool/
+xdg-data-home = []
+
+[build-dependencies]
+anyhow = "1"
+intel-mkl-tool = { version = "0.1.0", path = "../intel-mkl-tool", default-features = false }

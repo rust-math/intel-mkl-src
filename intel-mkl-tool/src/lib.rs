@@ -165,14 +165,3 @@ pub fn download_default<P: AsRef<Path>>(out_dir: P) -> Result<()> {
     cfg.download(out_dir)?;
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn download() -> Result<()> {
-        download_default("./test_download")?;
-        Ok(())
-    }
-}

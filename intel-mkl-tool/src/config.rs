@@ -95,9 +95,13 @@ impl Config {
     }
 
     /// Common components
+    ///
+    /// The order must be following (or equivalent libs)
+    ///
+    /// mkl_intel_lp64 > mkl_intel_thread > mkl_core > iomp5
+    ///
     pub fn libs(&self) -> Vec<String> {
         let mut libs = Vec::new();
-        libs.push("mkl_core".into());
         match self.index_size {
             Interface::LP64 => {
                 libs.push("mkl_intel_lp64".into());
@@ -108,13 +112,16 @@ impl Config {
         };
         match self.parallel {
             Threading::OpenMP => {
-                libs.push("iomp5".into());
                 libs.push("mkl_intel_thread".into());
             }
             Threading::Sequential => {
                 libs.push("mkl_sequential".into());
             }
         };
+        libs.push("mkl_core".into());
+        if matches!(self.parallel, Threading::OpenMP) {
+            libs.push("iomp5".into());
+        }
         libs
     }
 
@@ -212,5 +219,36 @@ mod tests {
         assert!(Config::from_str("mkl-static-l64-iomp").is_err());
         assert!(Config::from_str("mkl-static-lp64-omp").is_err());
         Ok(())
+    }
+
+    macro_rules! impl_test_download {
+        ($name:expr) => {
+            paste::item! {
+                #[test]
+                fn [<download_$name>]() -> Result<()> {
+                    let name = $name;
+                    let cfg = Config::from_str(name)?;
+                    cfg.download(format!("test_download/{}", name))?;
+                    Ok(())
+                }
+            }
+        };
+    }
+
+    mod dynamic {
+        use super::*;
+        impl_test_download!("mkl-dynamic-lp64-seq");
+        impl_test_download!("mkl-dynamic-lp64-iomp");
+        impl_test_download!("mkl-dynamic-ilp64-seq");
+        impl_test_download!("mkl-dynamic-ilp64-iomp");
+    }
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    mod static_ {
+        use super::*;
+        impl_test_download!("mkl-static-lp64-seq");
+        impl_test_download!("mkl-static-lp64-iomp");
+        impl_test_download!("mkl-static-ilp64-seq");
+        impl_test_download!("mkl-static-ilp64-iomp");
     }
 }
