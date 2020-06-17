@@ -209,10 +209,6 @@ impl Entry {
                 }
             }
         }
-
-        for common in &["pthread", "m", "dl"] {
-            println!("cargo:rustc-link-lib=dylib={}", common);
-        }
     }
 }
 
