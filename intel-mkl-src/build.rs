@@ -57,6 +57,10 @@ fn main() -> Result<()> {
         } else {
             PathBuf::from(env::var("OUT_DIR").unwrap())
         };
+        println!(
+            r#"cargo:warning="Download Intel MKL archive into {}""#,
+            path.display()
+        );
         cfg.download(path)?;
         let entry = Entry::from_config(cfg).unwrap(); // must found
         entry.print_cargo_metadata();
