@@ -11,6 +11,19 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
 [VM]:  https://software.intel.com/en-us/mkl-developer-reference-c-vector-mathematical-functions
 [VSL]: https://software.intel.com/en-us/mkl-developer-reference-c-statistical-functions
 
+## Supported features
+
+| feature name           | Linux              | macOS              | Windows            |
+|:-----------------------|:------------------:|:------------------:|:------------------:|
+| mkl-static-lp64-iomp   | :heavy_check_mark: | -                  | -                  |
+| mkl-static-lp64-seq    | :heavy_check_mark: | -                  | -                  |
+| mkl-static-ilp64-iomp  | :heavy_check_mark: | -                  | -                  |
+| mkl-static-ilp64-seq   | :heavy_check_mark: | -                  | -                  |
+| mkl-dynamic-lp64-iomp  | :heavy_check_mark: | :heavy_check_mark: | -                  |
+| mkl-dynamic-lp64-seq   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| mkl-dynamic-ilp64-iomp | :heavy_check_mark: | :heavy_check_mark: | -                  |
+| mkl-dynamic-ilp64-seq  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+
 ## Usage
 
 This crate is a `*-src` crate. This downloads and link Intel MKL, but does not introduce any symbols.
