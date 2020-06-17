@@ -14,7 +14,7 @@ build = "build.rs"
 links = "mkl_core"
 
 [features]
-default = ["mkl-static-lp64-seq"]
+default = ["download", "mkl-dynamic-lp64-iomp"]
 
 # MKL config
 # https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html

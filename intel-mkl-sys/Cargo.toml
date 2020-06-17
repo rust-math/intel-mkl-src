@@ -9,9 +9,25 @@ repository  = "https://github.com/rust-math/intel-mkl-src"
 keywords    = ["ffi"]
 license     = "MIT"
 
-[dependencies.intel-mkl-src]
-path = "../intel-mkl-src"
-version = "0.5.0"
+[features]
+default = ["download", "mkl-dynamic-lp64-iomp"]
+
+# MKL config
+# https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html
+mkl-static-lp64-iomp   = ["intel-mkl-src/mkl-static-lp64-iomp"]
+mkl-static-lp64-seq    = ["intel-mkl-src/mkl-static-lp64-seq"]
+mkl-static-ilp64-iomp  = ["intel-mkl-src/mkl-static-ilp64-iomp"]
+mkl-static-ilp64-seq   = ["intel-mkl-src/mkl-static-ilp64-seq"]
+mkl-dynamic-lp64-iomp  = ["intel-mkl-src/mkl-dynamic-lp64-iomp"]
+mkl-dynamic-lp64-seq   = ["intel-mkl-src/mkl-dynamic-lp64-seq"]
+mkl-dynamic-ilp64-iomp = ["intel-mkl-src/mkl-dynamic-ilp64-iomp"]
+mkl-dynamic-ilp64-seq  = ["intel-mkl-src/mkl-dynamic-ilp64-seq"]
+
+# Enable downloading from AWS S3 when not found
+download = ["intel-mkl-src/download"]
+
+[dependencies]
+intel-mkl-src = { path = "../intel-mkl-src", version = "0.5.0", default-features = false }
 
 [dev-dependencies]
 criterion = "0.3.0"
