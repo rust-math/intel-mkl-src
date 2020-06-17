@@ -7,52 +7,6 @@ on:
   pull_request: {}
 
 jobs:
-  windows:
-    runs-on: windows-2019
-    strategy:
-      matrix:
-        target: ["intel-mkl-src", "intel-mkl-sys", "intel-mkl-tool"]
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --manifest-path=${{ matrix.target }}/Cargo.toml
-
-  macos:
-    runs-on: macos-10.15
-    strategy:
-      matrix:
-        target: ["intel-mkl-src", "intel-mkl-sys", "intel-mkl-tool"]
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --manifest-path=${{ matrix.target }}/Cargo.toml
-
-  linux:
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        target: ["intel-mkl-src", "intel-mkl-sys", "intel-mkl-tool"]
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --manifest-path=${{ matrix.target }}/Cargo.toml
-
-  docker:
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        target: ["test", "seek", "package", "download"]
-    steps:
-    - uses: actions/checkout@v1
-    - name: Test with mkl-rust container
-      run: make -C intel-mkl-tool ${{ matrix.target }}
-
   check-format:
     runs-on: ubuntu-18.04
     steps:
@@ -61,4 +15,3 @@ jobs:
       with:
         command: fmt
         args: -- --check
-
