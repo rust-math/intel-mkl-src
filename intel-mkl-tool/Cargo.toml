@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-tool"
-version = "0.1.0"
+version = "0.2.0-alpha.0"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
@@ -15,21 +15,21 @@ cli = ["structopt", "env_logger"]
 
 [dependencies]
 anyhow = "1.0.31"
-curl = "0.4.25"
-derive_more = "0.99.7"
+curl = "0.4.29"
+derive_more = "0.99.8"
 dirs = "2.0.2"
 glob = "0.3.0"
 log = "0.4.8"
 pkg-config = "0.3.17"
-tar = "0.4.26"
-zstd = "0.5.1"
+tar = "0.4.29"
+zstd = "0.5.3"
 
 # CLI
-structopt  = { version = "0.3.5", optional = true }
+structopt  = { version = "0.3.15", optional = true }
 env_logger = { version = "0.7.1", optional = true }
 
 [dev-dependencies]
-paste = "*"
+paste = "0.1.17"
 
 [[bin]]
 name = "intel-mkl-tool"

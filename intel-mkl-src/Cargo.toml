@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-src"
-version = "0.5.0"
+version = "0.6.0-alpha.0"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
@@ -34,4 +34,4 @@ xdg-data-home = []
 
 [build-dependencies]
 anyhow = "1"
-intel-mkl-tool = { version = "0.1.0", path = "../intel-mkl-tool", default-features = false }
+intel-mkl-tool = { version = "0.2.0-alpha.0", path = "../intel-mkl-tool", default-features = false }
