@@ -26,8 +26,9 @@ jobs:
   docker:
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
-        target: ["test", "seek", "package", "download"]
+        target: ["test", "package", "seek", "seek-ubuntu", "seek-centos"]
     steps:
     - uses: actions/checkout@v1
     - name: Test with mkl-rust container
