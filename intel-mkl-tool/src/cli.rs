@@ -58,6 +58,10 @@ fn main() -> Result<()> {
         }
 
         Opt::Seek {} => {
+            let available = Entry::available();
+            if available.is_empty() {
+                bail!("No MKL found");
+            }
             for lib in Entry::available() {
                 if let Ok(version) = lib.version() {
                     println!("{:<22}: {}.{}", lib.name(), version.0, version.1);

@@ -34,12 +34,25 @@ Please use `blas-sys`, `lapack-sys`, or `fftw-sys` to use BLAS, LAPACK, FFTW int
 fftw-sys = { version = "0.4", features = ["intel-mkl"] }
 ```
 
-## pkg-config
+## Find system MKL libraries
 
-This crate does not download archive if `pkg-config` finds MKL shared library installed by other way.
-Be sure to set `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` correctly.
-For debian and ubuntu users, [ci/Dockerfile](ci/Dockerfile) may be helpful.
-Windows is not supported yet.
+This crate will download archive from AWS S3 `rust-intel-mkl` bucket if no MKL library installed by other way, e.g. [apt]/[yum].
+`intel-mkl-src` seeks MKL in following manner:
+
+- Check `${OUT_DIR}` where previous build has downloaded
+- Seek using [pkg-config] crate
+  - `${PKG_CONFIG_PATH}` has to be set correctly. It may not be set by default in usual install.
+  - You can confirm it by checking the following command returns error.
+    ```
+    pkg-config --libs mkl-dynamic-lp64-iomp
+    ```
+- (experimental) Seek `${XDG_DATA_HOME}/intel-mkl-tool`
+- Seek a directory set by `${MKLROOT}` environment variable
+- Seek `/opt/intel/mkl`
+
+[apt]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-apt-repo.html
+[yum]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-yum-repo.html
+[pkg-config]: https://github.com/rust-lang/pkg-config-rs
 
 ## License
 MKL is distributed under the Intel Simplified Software License for Intel(R) Math Kernel Library, See [License.txt](License.txt).

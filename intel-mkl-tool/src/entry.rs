@@ -36,7 +36,8 @@ impl Targets {
         self.0.iter().any(|(_key, value)| value.is_some())
     }
 
-    fn seek(&mut self, dir: &Path) {
+    fn seek<P: AsRef<Path>>(&mut self, dir: P) {
+        let dir = dir.as_ref();
         for (key, value) in &mut self.0 {
             if dir.join(key).exists() {
                 value.get_or_insert(dir.canonicalize().unwrap());
@@ -95,9 +96,23 @@ impl Entry {
             }
         }
 
-        // XDG_DATA_HOME
+        // $XDG_DATA_HOME/intel-mkl-tool
         let path = xdg_home_path().join(config.name());
         targets.seek(&path);
+
+        // $MKLROOT
+        let mkl_root = std::env::var("MKLROOT").map(|path| PathBuf::from(path));
+        if let Ok(path) = mkl_root {
+            if path.exists() {
+                targets.seek(path.join("lib/intel64"));
+            }
+        }
+
+        // /opt/intel/mkl
+        let opt_mkl = PathBuf::from("/opt/intel/mkl");
+        if opt_mkl.exists() {
+            targets.seek(opt_mkl.join("lib/intel64"));
+        }
 
         if targets.found_any() {
             return Ok(Self { config, targets });
