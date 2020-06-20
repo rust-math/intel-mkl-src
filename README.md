@@ -1,7 +1,7 @@
 # intel-mkl-src
 
 |crate | crate.io | description |
-|:-----|:--------:|:------------|
+|:-----|:---------|:------------|
 |intel-mkl-src| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-src)](https://crates.io/crates/intel-mkl-src)| Source crate for Intel-MKL |
 |intel-mkl-sys| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-sys)](https://crates.io/crates/intel-mkl-sys)| FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
 |intel-mkl-tool| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-tool)](https://crates.io/crates/intel-mkl-tool)| CLI utility for redistributing Intel-MKL |
@@ -34,10 +34,9 @@ Please use `blas-sys`, `lapack-sys`, or `fftw-sys` to use BLAS, LAPACK, FFTW int
 fftw-sys = { version = "0.4", features = ["intel-mkl"] }
 ```
 
-## Find system MKL libraries
+## How to find system MKL libraries
 
-This crate will download archive from AWS S3 `rust-intel-mkl` bucket if no MKL library installed by other way, e.g. [apt]/[yum].
-`intel-mkl-src` seeks MKL in following manner:
+This crate seeks system MKL libraries, e.g. installed by [apt], [yum], or official manual installer, as following manner:
 
 - Check `${OUT_DIR}` where previous build has downloaded
 - Seek using [pkg-config] crate
@@ -49,6 +48,8 @@ This crate will download archive from AWS S3 `rust-intel-mkl` bucket if no MKL l
 - (experimental) Seek `${XDG_DATA_HOME}/intel-mkl-tool`
 - Seek a directory set by `${MKLROOT}` environment variable
 - Seek `/opt/intel/mkl`
+
+If not found any MKL library, this crate will download archive from AWS S3 `rust-intel-mkl` bucket.
 
 [apt]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-apt-repo.html
 [yum]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-yum-repo.html
