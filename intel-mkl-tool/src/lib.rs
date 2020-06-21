@@ -128,8 +128,8 @@ mod mkl {
     pub const EXTENSION_STATIC: &'static str = "lib";
     pub const EXTENSION_SHARED: &'static str = "lib";
     pub const PREFIX: &'static str = "";
-    pub const VERSION_YEAR: u32 = 2019;
-    pub const VERSION_UPDATE: u32 = 5;
+    pub const VERSION_YEAR: u32 = 2020;
+    pub const VERSION_UPDATE: u32 = 1;
 }
 
 fn s3_addr() -> String {

@@ -114,6 +114,14 @@ impl Entry {
             targets.seek(opt_mkl.join("lib/intel64"));
         }
 
+        // Default setting for Windows installer
+        let windows_mkl =
+            PathBuf::from("C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows");
+        if windows_mkl.exists() {
+            targets.seek(windows_mkl.join("mkl/lib/intel64"));
+            targets.seek(windows_mkl.join("compiler/lib/intel64"));
+        }
+
         if targets.found_any() {
             return Ok(Self { config, targets });
         } else {
