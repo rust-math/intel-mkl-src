@@ -34,4 +34,4 @@ xdg-data-home = []
 
 [build-dependencies]
 anyhow = "1"
-intel-mkl-tool = { version = "0.2.0-alpha.1", path = "../intel-mkl-tool", default-features = false }
+intel-mkl-tool = { version = "0.2.0", path = "../intel-mkl-tool", default-features = false }
