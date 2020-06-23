@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-src"
-version = "0.6.0-alpha.1"
+version = "0.6.0+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
@@ -14,7 +14,7 @@ build = "build.rs"
 links = "mkl_core"
 
 [features]
-default = ["download", "mkl-dynamic-lp64-iomp"]
+default = ["download", "mkl-static-ilp64-seq"]
 
 # MKL config
 # https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html
@@ -34,4 +34,4 @@ xdg-data-home = []
 
 [build-dependencies]
 anyhow = "1"
-intel-mkl-tool = { version = "0.2.0-alpha.1", path = "../intel-mkl-tool", default-features = false }
+intel-mkl-tool = { version = "0.2.0", path = "../intel-mkl-tool", default-features = false }

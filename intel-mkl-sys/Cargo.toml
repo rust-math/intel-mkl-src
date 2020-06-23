@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-sys"
-version = "0.2.0-alpha.0"
+version = "0.2.0+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
@@ -10,7 +10,7 @@ keywords    = ["ffi"]
 license     = "MIT"
 
 [features]
-default = ["download", "mkl-dynamic-lp64-iomp"]
+default = ["download", "mkl-static-ilp64-seq"]
 
 # MKL config
 # https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html
@@ -27,7 +27,7 @@ mkl-dynamic-ilp64-seq  = ["intel-mkl-src/mkl-dynamic-ilp64-seq"]
 download = ["intel-mkl-src/download"]
 
 [dependencies]
-intel-mkl-src = { path = "../intel-mkl-src", version = "0.6.0-alpha.0", default-features = false }
+intel-mkl-src = { path = "../intel-mkl-src", version = "0.6.0", default-features = false }
 
 [dev-dependencies]
 criterion = "0.3.0"
