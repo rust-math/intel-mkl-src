@@ -16,9 +16,9 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
 | feature name           | Linux              | macOS              | Windows            |
 |:-----------------------|:------------------:|:------------------:|:------------------:|
 | mkl-static-lp64-iomp   | :heavy_check_mark: | -                  | -                  |
-| mkl-static-lp64-seq    | :heavy_check_mark: | -                  | -                  |
+| mkl-static-lp64-seq    | :heavy_check_mark: | -                  | :heavy_check_mark: |
 | mkl-static-ilp64-iomp  | :heavy_check_mark: | -                  | -                  |
-| mkl-static-ilp64-seq   | :heavy_check_mark: | -                  | -                  |
+| mkl-static-ilp64-seq   | :heavy_check_mark: | -                  | :heavy_check_mark: |
 | mkl-dynamic-lp64-iomp  | :heavy_check_mark: | :heavy_check_mark: | -                  |
 | mkl-dynamic-lp64-seq   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | mkl-dynamic-ilp64-iomp | :heavy_check_mark: | :heavy_check_mark: | -                  |
@@ -47,7 +47,9 @@ This crate seeks system MKL libraries, e.g. installed by [apt], [yum], or offici
     ```
 - (experimental) Seek `${XDG_DATA_HOME}/intel-mkl-tool`
 - Seek a directory set by `${MKLROOT}` environment variable
-- Seek `/opt/intel/mkl`
+- Seek default installation path
+  - `/opt/intel/mkl` for Linux
+  - `C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows` for Windows
 
 If not found any MKL library, this crate will download archive from AWS S3 `rust-intel-mkl` bucket.
 
