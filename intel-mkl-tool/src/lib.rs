@@ -91,7 +91,6 @@
 //!
 
 use anyhow::*;
-use log::*;
 use std::path::*;
 
 mod config;
@@ -148,20 +147,4 @@ pub fn xdg_home_path() -> PathBuf {
         mkl::VERSION_YEAR,
         mkl::VERSION_UPDATE
     ))
-}
-
-pub fn seek_pkg_config() -> Option<PathBuf> {
-    if let Ok(lib) = pkg_config::probe_library("mkl-dynamic-lp64-seq") {
-        if lib.libs.len() > 1 {
-            warn!("Found {} MKL libraries. Use first found.", lib.libs.len())
-        }
-        return Some(PathBuf::from(lib.libs[0].clone()));
-    }
-    None
-}
-
-pub fn download_default<P: AsRef<Path>>(out_dir: P) -> Result<()> {
-    let cfg = Config::from_str("mkl-dynamic-lp64-seq").unwrap();
-    cfg.download(out_dir)?;
-    Ok(())
 }
