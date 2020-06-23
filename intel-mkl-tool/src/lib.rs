@@ -90,11 +90,18 @@
 //! |mkl_cdft_core           |             libmkl_cdft_core.so|             libmkl_cdft_core.a|
 //!
 
+#![cfg_attr(not(feature = "archive"), allow(dead_code))]
+
 use anyhow::*;
 use std::path::*;
 
 mod config;
 mod entry;
+
+#[cfg(feature = "archive")]
+mod download;
+#[cfg(feature = "archive")]
+mod package;
 
 pub use config::*;
 pub use entry::*;
