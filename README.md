@@ -17,18 +17,20 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
   - `static` means MKL will be linked statically, and `dynamic` means MKL will be linked dynamically
   - `lp64` means 32-bit integer interface, `ilp64` means 64-bit integer interface
   - `iomp` means MKL uses Intel OpenMP, `seq` means sequential execution, e.g. no parallelization
+    - OpenMP is not supported for Windows currently [#46](https://github.com/rust-math/intel-mkl-src/issues/46)
   - default is `mkl-static-ilp64-seq`, and you must choose one of them.
+  - macOS is not supported [#42](https://github.com/rust-math/intel-mkl-src/issues/42)
 
-| feature name           | Linux              | macOS              | Windows            |
-|:-----------------------|:------------------:|:------------------:|:------------------:|
-| mkl-static-lp64-iomp   | :heavy_check_mark: | -                  | -                  |
-| mkl-static-lp64-seq    | :heavy_check_mark: | -                  | :heavy_check_mark: |
-| mkl-static-ilp64-iomp  | :heavy_check_mark: | -                  | -                  |
-| mkl-static-ilp64-seq   | :heavy_check_mark: | -                  | :heavy_check_mark: |
-| mkl-dynamic-lp64-iomp  | :heavy_check_mark: | :heavy_check_mark: | -                  |
-| mkl-dynamic-lp64-seq   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-| mkl-dynamic-ilp64-iomp | :heavy_check_mark: | :heavy_check_mark: | -                  |
-| mkl-dynamic-ilp64-seq  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+    | feature name           | Linux              | macOS              | Windows            |
+    |:-----------------------|:------------------:|:------------------:|:------------------:|
+    | mkl-static-lp64-iomp   | :heavy_check_mark: | -                  | -                  |
+    | mkl-static-lp64-seq    | :heavy_check_mark: | -                  | :heavy_check_mark: |
+    | mkl-static-ilp64-iomp  | :heavy_check_mark: | -                  | -                  |
+    | mkl-static-ilp64-seq   | :heavy_check_mark: | -                  | :heavy_check_mark: |
+    | mkl-dynamic-lp64-iomp  | :heavy_check_mark: | :heavy_check_mark: | -                  |
+    | mkl-dynamic-lp64-seq   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+    | mkl-dynamic-ilp64-iomp | :heavy_check_mark: | :heavy_check_mark: | -                  |
+    | mkl-dynamic-ilp64-seq  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 - `download` feature enables downloading MKL archive managed by this project from AWS S3 (default ON)
 
