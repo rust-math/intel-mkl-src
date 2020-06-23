@@ -235,7 +235,17 @@ mod tests {
         };
     }
 
-    mod dynamic {
+    #[cfg(target_os = "windows")]
+    mod macos {
+        use super::*;
+        impl_test_download!("mkl-dynamic-lp64-seq");
+        impl_test_download!("mkl-dynamic-ilp64-seq");
+        impl_test_download!("mkl-static-lp64-seq");
+        impl_test_download!("mkl-static-ilp64-seq");
+    }
+
+    #[cfg(target_os = "macos")]
+    mod macos {
         use super::*;
         impl_test_download!("mkl-dynamic-lp64-seq");
         impl_test_download!("mkl-dynamic-lp64-iomp");
@@ -243,9 +253,13 @@ mod tests {
         impl_test_download!("mkl-dynamic-ilp64-iomp");
     }
 
-    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
-    mod static_ {
+    #[cfg(target_os = "linux")]
+    mod linux {
         use super::*;
+        impl_test_download!("mkl-dynamic-lp64-seq");
+        impl_test_download!("mkl-dynamic-lp64-iomp");
+        impl_test_download!("mkl-dynamic-ilp64-seq");
+        impl_test_download!("mkl-dynamic-ilp64-iomp");
         impl_test_download!("mkl-static-lp64-seq");
         impl_test_download!("mkl-static-lp64-iomp");
         impl_test_download!("mkl-static-ilp64-seq");
