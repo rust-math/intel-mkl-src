@@ -1,10 +1,10 @@
 # intel-mkl-src
 
-|crate | crate.io | description |
-|:-----|:---------|:------------|
-|intel-mkl-src| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-src)](https://crates.io/crates/intel-mkl-src)| Source crate for Intel-MKL |
-|intel-mkl-sys| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-sys)](https://crates.io/crates/intel-mkl-sys)| FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
-|intel-mkl-tool| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-tool)](https://crates.io/crates/intel-mkl-tool)| CLI utility for redistributing Intel-MKL |
+|crate         | crate.io                                                                                           | description                                                           |
+|:-------------|:---------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------|
+|intel-mkl-src | [![Crate](http://meritbadge.herokuapp.com/intel-mkl-src)](https://crates.io/crates/intel-mkl-src)  | Source crate for Intel-MKL                                            |
+|intel-mkl-sys | [![Crate](http://meritbadge.herokuapp.com/intel-mkl-sys)](https://crates.io/crates/intel-mkl-sys)  | FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
+|intel-mkl-tool| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-tool)](https://crates.io/crates/intel-mkl-tool)| CLI utility for redistributing Intel-MKL                              |
 
 Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (since 0.4.0)
 
@@ -12,6 +12,12 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
 [VSL]: https://software.intel.com/en-us/mkl-developer-reference-c-statistical-functions
 
 ## Supported features
+
+- `mkl-*-*-*` features specify which MKL to be linked
+  - `static` means MKL will be linked statically, and `dynamic` means MKL will be linked dynamically
+  - `lp64` means 32-bit integer interface, `ilp64` means 64-bit integer interface
+  - `iomp` means MKL uses Intel OpenMP, `seq` means sequential execution, e.g. no parallelization
+  - default is `mkl-static-ilp64-seq`, and you must choose one of them.
 
 | feature name           | Linux              | macOS              | Windows            |
 |:-----------------------|:------------------:|:------------------:|:------------------:|
@@ -23,6 +29,8 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
 | mkl-dynamic-lp64-seq   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 | mkl-dynamic-ilp64-iomp | :heavy_check_mark: | :heavy_check_mark: | -                  |
 | mkl-dynamic-ilp64-seq  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+
+- `download` feature enables downloading MKL archive managed by this project from AWS S3 (default ON)
 
 ## Usage
 
@@ -51,7 +59,7 @@ This crate seeks system MKL libraries, e.g. installed by [apt], [yum], or offici
   - `/opt/intel/mkl` for Linux
   - `C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows` for Windows
 
-If not found any MKL library, this crate will download archive from AWS S3 `rust-intel-mkl` bucket.
+If not found any MKL library and `download` feature is ON, this crate will download archive from AWS S3 `rust-intel-mkl` bucket.
 
 [apt]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-apt-repo.html
 [yum]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-yum-repo.html
