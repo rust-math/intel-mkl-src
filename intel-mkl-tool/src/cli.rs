@@ -1,6 +1,5 @@
 use anyhow::*;
 use intel_mkl_tool::*;
-use log::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
 
@@ -34,9 +33,6 @@ enum Opt {
 }
 
 fn main() -> Result<()> {
-    env::set_var("RUST_LOG", "info");
-    env_logger::init();
-
     let opt = Opt::from_args();
 
     match opt {
@@ -47,7 +43,7 @@ fn main() -> Result<()> {
                 cfg.download(&path.join(cfg.name()))?;
             } else {
                 for cfg in Config::possibles() {
-                    info!(
+                    println!(
                         "Download archive {:<22} into {}",
                         cfg.name(),
                         path.display()
@@ -85,7 +81,7 @@ fn main() -> Result<()> {
                     path
                 };
                 let package = entry.package(&path)?;
-                info!("Pacakge created: {}", package.display());
+                println!("Pacakge created: {}", package.display());
             } else {
                 for entry in Entry::available() {
                     let path = if let Ok(version) = entry.version() {
@@ -94,7 +90,7 @@ fn main() -> Result<()> {
                         path.clone()
                     };
                     let package = entry.package(&path)?;
-                    info!("Pacakge created: {}", package.display());
+                    println!("Pacakge created: {}", package.display());
                 }
             }
         }

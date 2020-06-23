@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#![cfg_attr(feature = "download", allow(unreachable_code))]
+
 use anyhow::*;
 use intel_mkl_tool::*;
 use std::{env, path::*};
@@ -51,7 +53,8 @@ fn main() -> Result<()> {
     }
 
     // download if not found
-    if cfg!(feature = "download") {
+    #[cfg(feature = "download")]
+    {
         let path = if cfg!(feature = "xdg-data-home") {
             xdg_home_path()
         } else {
@@ -64,6 +67,8 @@ fn main() -> Result<()> {
         cfg.download(path)?;
         let entry = Entry::from_config(cfg).unwrap(); // must found
         entry.print_cargo_metadata();
+        return Ok(());
     }
-    Ok(())
+
+    bail!("No MKL found, and download flag is off.");
 }
