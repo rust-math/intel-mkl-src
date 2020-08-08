@@ -15,6 +15,7 @@ push: build ubuntu centos
 
 test: build
 	docker run -it --rm $(REGISTRY)/mkl-rust:$(RUST_VERSION) pkg-config --libs mkl-dynamic-lp64-iomp
+	docker run -it --rm $(REGISTRY)/mkl-rust:$(RUST_VERSION) ldconfig -p | grep mkl
 
 ubuntu:
 	docker build . -f $@.Dockerfile              \
