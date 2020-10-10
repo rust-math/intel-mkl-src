@@ -34,7 +34,9 @@ fn read_from_url(url: &str) -> Result<Vec<u8>> {
                 Ok(new_data.len())
             })
             .unwrap();
-        transfer.perform().unwrap();
+
+        let msg = format!("Error while downloading URL: {}", url);
+        transfer.perform().expect(&msg);
     }
     Ok(data)
 }

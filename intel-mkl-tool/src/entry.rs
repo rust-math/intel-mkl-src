@@ -111,6 +111,7 @@ impl Entry {
         // /opt/intel/mkl
         let opt_mkl = PathBuf::from("/opt/intel/mkl");
         if opt_mkl.exists() {
+            targets.seek(opt_mkl.join("lib"));
             targets.seek(opt_mkl.join("lib/intel64"));
         }
 
