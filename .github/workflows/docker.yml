@@ -1,4 +1,4 @@
-name: Docker
+name: docker
 
 on:
   push:
@@ -7,12 +7,29 @@ on:
   pull_request: {}
 
 jobs:
-  push:
+  rust:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
     - name: build and push docker image
       run: |
         echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
-        cd docker
-        make push
+        make -C docker push/rust
+
+  centos:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: build and push docker image
+      run: |
+        echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+        make -C docker push/centos
+
+  ubuntu:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: build and push docker image
+      run: |
+        echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
+        make -C docker push/ubuntu
