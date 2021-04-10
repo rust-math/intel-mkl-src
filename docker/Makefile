@@ -1,4 +1,4 @@
-REGISTRY     := docker.pkg.github.com/rust-math/intel-mkl-src
+REGISTRY     := ghcr.io/rust-math/intel-mkl-src
 RUST_VERSION := 1.49.0
 
 all: test ubuntu centos
