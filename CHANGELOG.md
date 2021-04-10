@@ -1,3 +1,10 @@
+Unreleased
+-----------
+
+### Changed
+
+- Repository of container image has been moved to GitHub Packages from DockerHub https://github.com/rust-math/intel-mkl-src/pull/60
+
 0.6.0+mkl2020.1 - 2020-06-23
 =============================
 
