@@ -13,5 +13,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: build and push docker image
       run: |
+        echo "${{ github.token }}" | docker login https://docker.pkg.github.com -u ${GITHUB_ACTOR} --password-stdin
         cd docker
         make push
