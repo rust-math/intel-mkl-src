@@ -1,0 +1,17 @@
+name: Docker
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: {}
+
+jobs:
+  push:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v1
+    - name: build and push docker image
+      run: |
+        cd docker
+        make push
