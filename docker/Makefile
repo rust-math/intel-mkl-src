@@ -1,28 +1,23 @@
-REGISTRY     := rustmath
-RUST_VERSION := 1.43.0
+TARGETS := rust ubuntu centos
 
-all: test ubuntu centos
+all: build
+build: $(foreach TARGET,$(TARGETS),build/$(TARGET))
+push:  $(foreach TARGET,$(TARGETS),push/$(TARGET))
 
-build:
-	docker build .                               \
-		--build-arg "RUST_VERSION=$(RUST_VERSION)" \
-		-t $(REGISTRY)/mkl-rust:$(RUST_VERSION)
+build/rust:
+	$(MAKE) -f rust.mk build
 
-push: build ubuntu centos
-	docker push $(REGISTRY)/mkl-rust:$(RUST_VERSION)
-	docker push $(REGISTRY)/mkl-centos:$(RUST_VERSION)
-	docker push $(REGISTRY)/mkl-ubuntu:$(RUST_VERSION)
+build/ubuntu:
+	$(MAKE) -f ubuntu.mk build
 
-test: build
-	docker run -it --rm $(REGISTRY)/mkl-rust:$(RUST_VERSION) pkg-config --libs mkl-dynamic-lp64-iomp
-	docker run -it --rm $(REGISTRY)/mkl-rust:$(RUST_VERSION) ldconfig -p | grep mkl
+build/centos:
+	$(MAKE) -f centos.mk build
 
-ubuntu:
-	docker build . -f $@.Dockerfile              \
-		--build-arg "RUST_VERSION=$(RUST_VERSION)" \
-		-t $(REGISTRY)/mkl-ubuntu:$(RUST_VERSION)
+push/rust: build/rust
+	$(MAKE) -f rust.mk push
 
-centos:
-	docker build . -f $@.Dockerfile              \
-		--build-arg "RUST_VERSION=$(RUST_VERSION)" \
-		-t $(REGISTRY)/mkl-centos:$(RUST_VERSION)
+push/ubuntu: build/ubuntu
+	$(MAKE) -f ubuntu.mk push
+
+push/centos: build/centos
+	$(MAKE) -f centos.mk push
