@@ -1,5 +1,5 @@
 REGISTRY     := rustmath
-RUST_VERSION := 1.43.0
+RUST_VERSION := 1.49.0
 
 all: test ubuntu centos
 
