@@ -115,11 +115,15 @@ impl Entry {
         }
 
         // Default setting for Windows installer
-        let windows_mkl =
-            PathBuf::from("C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows");
+        let windows_mkl = if let Ok(oneapi) = std::env::var("ONEAPI_ROOT") {
+            oneapi.into()
+        } else {
+            PathBuf::from("C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows")
+        };
         if windows_mkl.exists() {
             targets.seek(windows_mkl.join("mkl/lib/intel64"));
             targets.seek(windows_mkl.join("compiler/lib/intel64"));
+            targets.seek(windows_mkl.join("compiler/latest/windows/compiler/lib/intel64_win"));
         }
 
         if targets.found_any() {

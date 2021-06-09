@@ -17,7 +17,7 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
   - `static` means MKL will be linked statically, and `dynamic` means MKL will be linked dynamically
   - `lp64` means 32-bit integer interface, `ilp64` means 64-bit integer interface
   - `iomp` means MKL uses Intel OpenMP, `seq` means sequential execution, e.g. no parallelization
-    - OpenMP is not supported for Windows currently [#46](https://github.com/rust-math/intel-mkl-src/issues/46)
+    - For OpenMP supported on Windows check [#46](https://github.com/rust-math/intel-mkl-src/issues/46)
   - default is `mkl-static-ilp64-seq`, and you must choose one of them.
   - macOS is not supported [#42](https://github.com/rust-math/intel-mkl-src/issues/42)
 
@@ -59,6 +59,7 @@ This crate seeks system MKL libraries, e.g. installed by [apt], [yum], or offici
 - Seek a directory set by `${MKLROOT}` environment variable
 - Seek default installation path
   - `/opt/intel/mkl` for Linux
+  - `C:\Program Files (x86)\Intel\oneAPI\` for Windows with oneAPI distribution
   - `C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows` for Windows
 
 If not found any MKL library and `download` feature is ON, this crate will download archive from AWS S3 `rust-intel-mkl` bucket.
