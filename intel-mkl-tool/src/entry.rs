@@ -48,11 +48,17 @@ impl Targets {
     }
 }
 
+#[derive(Debug)]
+enum EntryTarget {
+    Manual(Targets),
+    PkgConfig,
+}
+
 /// Handler for found library
 #[derive(Debug)]
 pub struct Entry {
     config: Config,
-    targets: Targets,
+    target: EntryTarget,
 }
 
 impl Entry {
@@ -80,22 +86,14 @@ impl Entry {
         }
 
         // pkg-config
-        if let Ok(lib) = pkg_config::Config::new()
+        if let Ok(_) = pkg_config::Config::new()
             .cargo_metadata(false)
             .probe(&config.name())
         {
-            for path in lib.link_paths {
-                targets.seek(&path);
-            }
-
-            // assumes following directory structure:
-            //
-            // - mkl
-            //   - include      <- lib.include_paths detects this
-            //   - lib/intel64
-            for path in lib.include_paths {
-                targets.seek(&path.join("../lib/intel64"));
-            }
+            return Ok(Self {
+                config,
+                target: EntryTarget::PkgConfig,
+            });
         }
 
         // $XDG_DATA_HOME/intel-mkl-tool
@@ -125,7 +123,10 @@ impl Entry {
         }
 
         if targets.found_any() {
-            return Ok(Self { config, targets });
+            return Ok(Self {
+                config,
+                target: EntryTarget::Manual(targets),
+            });
         } else {
             // None found
             bail!("No library found for {}", config.name());
@@ -137,7 +138,11 @@ impl Entry {
     }
 
     pub fn found_files(&self) -> Vec<(PathBuf, String)> {
-        self.targets.found_files()
+        if let EntryTarget::Manual(m) = &self.target {
+            m.found_files()
+        } else {
+            vec![]
+        }
     }
 
     pub fn available() -> Vec<Self> {
@@ -196,22 +201,31 @@ impl Entry {
     }
 
     pub fn print_cargo_metadata(&self) {
-        let paths: HashSet<PathBuf> = self
-            .found_files()
-            .into_iter()
-            .map(|(path, _name)| path)
-            .collect(); // must be redundant
-        for path in paths {
-            println!("cargo:rustc-link-search={}", path.display());
-        }
-        for lib in self.config.libs() {
-            match self.config.link {
-                LinkType::Static => {
-                    println!("cargo:rustc-link-lib=static={}", lib);
+        match &self.target {
+            EntryTarget::Manual(_target) => {
+                let paths: HashSet<PathBuf> = self
+                    .found_files()
+                    .into_iter()
+                    .map(|(path, _name)| path)
+                    .collect(); // must be redundant
+                for path in paths {
+                    println!("cargo:rustc-link-search={}", path.display());
                 }
-                LinkType::Shared => {
-                    println!("cargo:rustc-link-lib=dylib={}", lib);
+                for lib in self.config.libs() {
+                    match self.config.link {
+                        LinkType::Static => {
+                            println!("cargo:rustc-link-lib=static={}", lib);
+                        }
+                        LinkType::Shared => {
+                            println!("cargo:rustc-link-lib=dylib={}", lib);
+                        }
+                    }
                 }
+            }
+            EntryTarget::PkgConfig => {
+                pkg_config::Config::new()
+                    .probe(&self.config.name())
+                    .unwrap();
             }
         }
     }
