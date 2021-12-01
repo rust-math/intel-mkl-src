@@ -92,8 +92,8 @@
 
 #![cfg_attr(not(feature = "archive"), allow(dead_code))]
 
-use anyhow::*;
-use std::path::*;
+use anyhow::{bail, Result};
+use std::path::{Path, PathBuf};
 
 mod config;
 mod entry;
