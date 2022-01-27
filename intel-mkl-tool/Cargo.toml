@@ -15,7 +15,7 @@ archive = ["curl", "tar", "zstd"]
 cli     = ["structopt", "archive"]
 
 [dependencies]
-anyhow = "1.0.31"
+anyhow = "<=1.0.48"
 derive_more = "0.99.8"
 dirs = "2.0.2"
 glob = "0.3.0"
@@ -24,7 +24,7 @@ pkg-config = "0.3.17"
 # archive
 curl = { version = "0.4.29", optional = true }
 tar  = { version = "0.4.29", optional = true }
-zstd = { version = "0.8",    optional = true }
+zstd = { version = "0.10",   optional = true }
 
 # CLI
 structopt = { version = "0.3.15", optional = true }
