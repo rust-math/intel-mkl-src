@@ -24,7 +24,7 @@ pkg-config = "0.3.17"
 # archive
 curl = { version = "0.4.29", optional = true }
 tar  = { version = "0.4.29", optional = true }
-zstd = { version = "0.11",  optional = true }
+zstd = { version = "<=0.11, >=0.6",  optional = true }
 
 # CLI
 structopt = { version = "0.3.15", optional = true }
