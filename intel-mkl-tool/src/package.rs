@@ -1,8 +1,9 @@
 use crate::*;
 use std::{fs, io};
+use anyhow::{Error, bail};
 
 impl Entry {
-    pub fn package(&self, out_dir: &Path) -> Result<PathBuf> {
+    pub fn package(&self, out_dir: &Path) -> Result<PathBuf, Error> {
         fs::create_dir_all(out_dir)?;
         let out = out_dir.join(format!("{}.tar.zst", self.name()));
         if out.exists() {

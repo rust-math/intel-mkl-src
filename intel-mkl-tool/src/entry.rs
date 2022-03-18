@@ -5,6 +5,7 @@ use std::{
     fs,
     io::{self, BufRead},
 };
+use anyhow::{Error, bail};
 
 #[derive(Debug, Deref)]
 struct Targets(HashMap<String, Option<PathBuf>>);
@@ -68,7 +69,7 @@ impl Entry {
     ///
     /// Returns error if no library found
     ///
-    pub fn from_config(config: Config) -> Result<Self> {
+    pub fn from_config(config: Config) -> Result<Self, Error> {
         let mut targets = Targets::new(config);
 
         // OUT_DIR
@@ -149,7 +150,7 @@ impl Entry {
     ///
     /// - This will not work for OUT_DIR or XDG_DATA_HOME entry,
     ///   and returns Error in these cases
-    pub fn version(&self) -> Result<(u32, u32)> {
+    pub fn version(&self) -> Result<(u32, u32), Error> {
         for (path, _) in &self.found_files() {
             // assumes following directory structure:
             //

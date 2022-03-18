@@ -4,7 +4,7 @@ use std::fs;
 
 impl Config {
     /// Download archive from AWS S3, and expand into `${out_dir}/*.so`
-    pub fn download<P: AsRef<Path>>(&self, out_dir: P) -> Result<()> {
+    pub fn download<P: AsRef<Path>>(&self, out_dir: P) -> Result<(), Error> {
         let out_dir = out_dir.as_ref();
         if out_dir.exists() {
             fs::create_dir_all(&out_dir)?;
@@ -21,7 +21,7 @@ impl Config {
 ///
 /// - This function expands obtained data into memory space
 ///
-fn read_from_url(url: &str) -> Result<Vec<u8>> {
+fn read_from_url(url: &str) -> Result<Vec<u8>, Error> {
     let mut data = Vec::new();
     let mut handle = Easy::new();
     handle.fail_on_error(true)?;
@@ -47,7 +47,7 @@ mod tests {
         ($name:expr) => {
             paste::item! {
                 #[test]
-                fn [<download_$name>]() -> Result<()> {
+                fn [<download_$name>]() -> Result<(), Error> {
                     let name = $name;
                     let cfg = Config::from_str(name)?;
                     cfg.download(format!("test_download/{}", name))?;

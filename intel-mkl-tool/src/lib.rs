@@ -92,7 +92,7 @@
 
 #![cfg_attr(not(feature = "archive"), allow(dead_code))]
 
-use anyhow::*;
+use anyhow::Error;
 use std::path::*;
 
 mod config;
