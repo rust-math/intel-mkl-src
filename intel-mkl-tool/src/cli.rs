@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{bail, Result};
 use intel_mkl_tool::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;
@@ -32,7 +32,7 @@ enum Opt {
     },
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     match opt {

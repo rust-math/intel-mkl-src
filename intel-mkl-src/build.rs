@@ -22,9 +22,9 @@
 
 #![cfg_attr(feature = "download", allow(unreachable_code))]
 
-use anyhow::{bail, Error};
+use anyhow::{bail, Result};
 use intel_mkl_tool::*;
-use std::{env, path::*};
+use std::{env, path::PathBuf};
 
 #[cfg(feature = "mkl-static-lp64-iomp")]
 const MKL_CONFIG: &str = "mkl-static-lp64-iomp";
@@ -43,7 +43,7 @@ const MKL_CONFIG: &str = "mkl-dynamic-ilp64-iomp";
 #[cfg(feature = "mkl-dynamic-ilp64-seq")]
 const MKL_CONFIG: &str = "mkl-dynamic-ilp64-seq";
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let cfg = Config::from_str(MKL_CONFIG).unwrap();
 
     // already exists on system

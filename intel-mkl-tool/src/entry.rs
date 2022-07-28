@@ -1,11 +1,12 @@
-use crate::*;
+use crate::{mkl, xdg_home_path, Config, LinkType, VALID_CONFIGS};
+use anyhow::{bail, Result};
 use derive_more::Deref;
 use std::{
     collections::{HashMap, HashSet},
     fs,
     io::{self, BufRead},
+    path::{Path, PathBuf},
 };
-use anyhow::{Error, bail};
 
 #[derive(Debug, Deref)]
 struct Targets(HashMap<String, Option<PathBuf>>);
@@ -69,7 +70,7 @@ impl Entry {
     ///
     /// Returns error if no library found
     ///
-    pub fn from_config(config: Config) -> Result<Self, Error> {
+    pub fn from_config(config: Config) -> Result<Self> {
         let mut targets = Targets::new(config);
 
         // OUT_DIR
@@ -150,7 +151,7 @@ impl Entry {
     ///
     /// - This will not work for OUT_DIR or XDG_DATA_HOME entry,
     ///   and returns Error in these cases
-    pub fn version(&self) -> Result<(u32, u32), Error> {
+    pub fn version(&self) -> Result<(u32, u32)> {
         for (path, _) in &self.found_files() {
             // assumes following directory structure:
             //

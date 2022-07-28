@@ -1,5 +1,5 @@
-use derive_more::*;
-use anyhow::{bail, Error};
+use anyhow::{bail, Result};
+use derive_more::Display;
 
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
@@ -45,7 +45,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_str(name: &str) -> Result<Self, Error> {
+    pub fn from_str(name: &str) -> Result<Self> {
         let parts: Vec<_> = name.split("-").collect();
         if parts.len() != 4 {
             bail!("Invalid name: {}", name);
@@ -151,7 +151,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn name_to_config() -> Result<(), Error> {
+    fn name_to_config() -> Result<()> {
         let cfg = Config::from_str("mkl-static-lp64-iomp")?;
         assert_eq!(
             cfg,
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn name_to_config_to_name() -> Result<(), Error> {
+    fn name_to_config_to_name() -> Result<()> {
         for name in VALID_CONFIGS {
             let cfg = Config::from_str(name)?;
             assert_eq!(&cfg.name(), name);
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn invalid_names() -> Result<(), Error> {
+    fn invalid_names() -> Result<()> {
         assert!(Config::from_str("").is_err());
         assert!(Config::from_str("static-lp64-iomp").is_err());
         assert!(Config::from_str("mkll-static-lp64-iomp").is_err());
