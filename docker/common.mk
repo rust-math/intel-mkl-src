@@ -2,7 +2,7 @@ TOP  := $(shell git rev-parse --show-toplevel)
 HERE := $(TOP)/docker
 
 REGISTRY     := ghcr.io/rust-math/intel-mkl-src
-RUST_VERSION := 1.62.1
+RUST_VERSION := 1.56.0
 
 all: build
 
