@@ -1,6 +1,6 @@
 HERE          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 REGISTRY      := ghcr.io/rust-math/intel-mkl-src
-RUST_VERSION  := 1.49.0
+RUST_VERSION  := 1.56.0
 DOCKER_OPTION := --rm -u $(shell id -u):$(shell id -g) -v $(HERE):/src
 
 test:
