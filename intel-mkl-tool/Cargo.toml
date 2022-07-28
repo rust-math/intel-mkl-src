@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-tool"
-version = "0.2.0+mkl2020.1"
+version = "0.2.1+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
@@ -24,7 +24,7 @@ pkg-config = "0.3.17"
 # archive
 curl = { version = "0.4.29", optional = true }
 tar  = { version = "0.4.29", optional = true }
-zstd = { version = "0.6.1",  optional = true }
+zstd = { version = "<=0.11, >=0.6",  optional = true }
 
 # CLI
 structopt = { version = "0.3.15", optional = true }

@@ -1,6 +1,7 @@
-use crate::*;
+use crate::{s3_addr, Config};
+use anyhow::Result;
 use curl::easy::Easy;
-use std::fs;
+use std::{fs, path::Path};
 
 impl Config {
     /// Download archive from AWS S3, and expand into `${out_dir}/*.so`
