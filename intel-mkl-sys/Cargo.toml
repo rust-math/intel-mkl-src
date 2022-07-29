@@ -32,9 +32,9 @@ download = ["intel-mkl-src/download"]
 intel-mkl-src = { path = "../intel-mkl-src", version = "0.6.0", default-features = false }
 
 [dev-dependencies]
-criterion = "0.3.0"
-rand = "0.7.2"
-approx = "0.3.2"
+criterion = "0.3.6"
+rand = "0.8.5"
+approx = "0.5.1"
 
 [[bench]]
 name = "cos"
