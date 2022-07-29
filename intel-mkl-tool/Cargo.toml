@@ -37,6 +37,3 @@ paste = "1.0.7"
 name = "intel-mkl-tool"
 path = "src/cli.rs"
 required-features = ["cli"]
-
-[package.metadata.release]
-no-dev-version = true
