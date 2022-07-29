@@ -1,10 +1,14 @@
 Unreleased
 -----------
 
-### Changed
+### Fixed
+- Remove use * for external crates for anyhow error https://github.com/rust-math/intel-mkl-src/pull/70
 
-- widen zstd version range https://github.com/rust-math/intel-mkl-src/pull/71
-- Remove use * for external crates https://github.com/rust-math/intel-mkl-src/pull/70
+### Changed
+- Set minimal supported rustc version (MSRV) to 1.56.0 https://github.com/rust-math/intel-mkl-src/pull/73
+- Update dependencies https://github.com/rust-math/intel-mkl-src/pull/74
+  - zstd 0.11 https://github.com/rust-math/intel-mkl-src/pull/71
+  - dirs 4.0 https://github.com/rust-math/intel-mkl-src/pull/74
 - Repository of container image has been moved to GitHub Container Registry (ghcr.io) from DockerHub https://github.com/rust-math/intel-mkl-src/pull/60
 
 0.6.0+mkl2020.1 - 2020-06-23
