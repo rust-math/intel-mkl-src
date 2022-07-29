@@ -1,6 +1,14 @@
 Unreleased
 -----------
 
+0.7.0+mkl2020.1 - 2022-07-29
+=============================
+
+Released 2 crates
+
+- intel-mkl-src 0.7.0+mkl2020.1
+- intel-mkl-tool 0.3.0+mkl2020.1
+
 ### Fixed
 - Remove use * for external crates for anyhow error https://github.com/rust-math/intel-mkl-src/pull/70
 
