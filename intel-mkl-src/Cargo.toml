@@ -1,8 +1,10 @@
 [package]
 name = "intel-mkl-src"
-version = "0.6.0+mkl2020.1"
+version = "0.7.0+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
+
+rust-version = "1.56.0" # MSRV is introduced
 
 description = "Redistribution of Intel(R) MKL as a crate"
 repository = "https://github.com/rust-math/intel-mkl-src"
@@ -14,7 +16,7 @@ build = "build.rs"
 links = "mkl_core"
 
 [features]
-default = ["download", "mkl-static-ilp64-seq"]
+default = ["mkl-static-ilp64-seq"]
 
 # MKL config
 # https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html
@@ -33,5 +35,5 @@ download = ["intel-mkl-tool/archive"]
 xdg-data-home = []
 
 [build-dependencies]
-anyhow = "1"
-intel-mkl-tool = { version = "0.2.0", path = "../intel-mkl-tool", default-features = false }
+anyhow = "1.0.58"
+intel-mkl-tool = { version = "0.3.0", path = "../intel-mkl-tool", default-features = false }

@@ -4,6 +4,8 @@ version = "0.2.0+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
+rust-version = "1.56.0" # MSRV is introduced
+
 description = "FFI for Intel(R) MKL"
 repository  = "https://github.com/rust-math/intel-mkl-src"
 keywords    = ["ffi"]
@@ -27,12 +29,12 @@ mkl-dynamic-ilp64-seq  = ["intel-mkl-src/mkl-dynamic-ilp64-seq"]
 download = ["intel-mkl-src/download"]
 
 [dependencies]
-intel-mkl-src = { path = "../intel-mkl-src", version = "0.6.0", default-features = false }
+intel-mkl-src = { path = "../intel-mkl-src", version = "0.7.0", default-features = false }
 
 [dev-dependencies]
-criterion = "0.3.0"
-rand = "0.7.2"
-approx = "0.3.2"
+criterion = "0.3.6"
+rand = "0.8.5"
+approx = "0.5.1"
 
 [[bench]]
 name = "cos"
