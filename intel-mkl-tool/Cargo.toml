@@ -1,6 +1,6 @@
 [package]
 name = "intel-mkl-tool"
-version = "0.2.1+mkl2020.1"
+version = "0.3.0+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 rust-version = "1.56.0" # MSRV is introduced
