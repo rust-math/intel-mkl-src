@@ -35,5 +35,5 @@ download = ["intel-mkl-tool/archive"]
 xdg-data-home = []
 
 [build-dependencies]
-anyhow = "1"
+anyhow = "1.0.58"
 intel-mkl-tool = { version = "0.2.0", path = "../intel-mkl-tool", default-features = false }
