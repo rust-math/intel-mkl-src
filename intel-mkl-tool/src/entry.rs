@@ -154,7 +154,7 @@ impl Entry {
 
     /// Get MKL version info from its C header
     ///
-    /// - This will not work for OUT_DIR or XDG_DATA_HOME entry,
+    /// - This will not work for OUT_DIR, XDG_DATA_HOME, or Pkgconfig entry,
     ///   and returns Error in these cases
     pub fn version(&self) -> Result<(u32, u32)> {
         for (path, _) in &self.found_files() {
@@ -240,13 +240,5 @@ mod tests {
     #[test]
     fn with_mkl_availables() {
         assert_eq!(Entry::available().len(), 8);
-    }
-
-    #[ignore]
-    #[test]
-    fn with_mkl_version() {
-        for entry in Entry::available() {
-            let _version = entry.version().unwrap();
-        }
     }
 }
