@@ -29,7 +29,7 @@ mkl-dynamic-ilp64-seq  = ["intel-mkl-src/mkl-dynamic-ilp64-seq"]
 download = ["intel-mkl-src/download"]
 
 [dependencies]
-intel-mkl-src = { path = "../intel-mkl-src", version = "0.6.0", default-features = false }
+intel-mkl-src = { path = "../intel-mkl-src", version = "0.7.0", default-features = false }
 
 [dev-dependencies]
 criterion = "0.3.6"
