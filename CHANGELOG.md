@@ -3,6 +3,8 @@ Unreleased
 
 ### Changed
 
+- widen zstd version range https://github.com/rust-math/intel-mkl-src/pull/71
+- Remove use * for external crates https://github.com/rust-math/intel-mkl-src/pull/70
 - Repository of container image has been moved to GitHub Container Registry (ghcr.io) from DockerHub https://github.com/rust-math/intel-mkl-src/pull/60
 
 0.6.0+mkl2020.1 - 2020-06-23

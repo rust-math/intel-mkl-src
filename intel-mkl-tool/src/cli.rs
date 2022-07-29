@@ -1,4 +1,4 @@
-use anyhow::*;
+use anyhow::{bail, Result};
 use intel_mkl_tool::*;
 use std::{env, path::PathBuf};
 use structopt::StructOpt;

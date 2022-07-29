@@ -1,5 +1,9 @@
-use crate::*;
-use std::{fs, io};
+use crate::Entry;
+use anyhow::{bail, Result};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
 impl Entry {
     pub fn package(&self, out_dir: &Path) -> Result<PathBuf> {
