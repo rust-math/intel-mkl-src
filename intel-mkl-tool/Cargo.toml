@@ -16,22 +16,22 @@ archive = ["curl", "tar", "zstd"]
 cli     = ["structopt", "archive"]
 
 [dependencies]
-anyhow = "1.0.31"
-derive_more = "0.99.8"
-dirs = "2.0.2"
+anyhow = "1.0.58"
+derive_more = "0.99.17"
+dirs = "4.0.0"
 glob = "0.3.0"
-pkg-config = "0.3.17"
+pkg-config = "0.3.25"
 
 # archive
-curl = { version = "0.4.29", optional = true }
-tar  = { version = "0.4.29", optional = true }
-zstd = { version = "<=0.11, >=0.6",  optional = true }
+curl = { version = "0.4.44", optional = true }
+tar  = { version = "0.4.38", optional = true }
+zstd = { version = "0.11.2", optional = true }
 
 # CLI
-structopt = { version = "0.3.15", optional = true }
+structopt = { version = "0.3.26", optional = true }
 
 [dev-dependencies]
-paste = "0.1.17"
+paste = "1.0.7"
 
 [[bin]]
 name = "intel-mkl-tool"
