@@ -4,6 +4,8 @@ version = "0.6.0+mkl2020.1"
 authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 
+rust-version = "1.56.0" # MSRV is introduced
+
 description = "Redistribution of Intel(R) MKL as a crate"
 repository = "https://github.com/rust-math/intel-mkl-src"
 keywords = ["fft", "blas", "lapack"]
