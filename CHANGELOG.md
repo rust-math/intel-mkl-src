@@ -1,6 +1,9 @@
 Unreleased
 -----------
 
+### Fixed
+- make intel-mkl-tool use pkg-config canonically https://github.com/rust-math/intel-mkl-src/pull/65
+
 0.7.0+mkl2020.1 - 2022-07-29
 =============================
 
