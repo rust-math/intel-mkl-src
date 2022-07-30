@@ -108,10 +108,11 @@ impl Entry {
             }
         }
 
-        // /opt/intel/mkl
-        let opt_mkl = PathBuf::from("/opt/intel/mkl");
+        // /opt/intel
+        let opt_mkl = PathBuf::from("/opt/intel");
         if opt_mkl.exists() {
             targets.seek(opt_mkl.join("lib/intel64"));
+            targets.seek(opt_mkl.join("mkl/lib/intel64"));
         }
 
         // Default setting for Windows installer
