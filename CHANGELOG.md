@@ -2,6 +2,7 @@ Unreleased
 -----------
 
 ### Fixed
+- Added path for libiomp5 static libraries under /opt/intel https://github.com/rust-math/intel-mkl-src/pull/63
 - make intel-mkl-tool use pkg-config canonically https://github.com/rust-math/intel-mkl-src/pull/65
 
 0.7.0+mkl2020.1 - 2022-07-29
