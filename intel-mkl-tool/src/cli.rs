@@ -40,15 +40,11 @@ fn main() -> Result<()> {
             let path = path.unwrap_or(xdg_home_path());
             if let Some(name) = name {
                 let cfg = Config::from_str(&name)?;
-                cfg.download(&path.join(cfg.name()))?;
+                cfg.download(&path.join(cfg.to_string()))?;
             } else {
                 for cfg in Config::possibles() {
-                    println!(
-                        "Download archive {:<22} into {}",
-                        cfg.name(),
-                        path.display()
-                    );
-                    cfg.download(&path.join(cfg.name()))?;
+                    println!("Download archive {:<22} into {}", cfg, path.display());
+                    cfg.download(&path.join(cfg.to_string()))?;
                 }
             }
         }

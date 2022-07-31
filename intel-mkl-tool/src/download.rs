@@ -10,7 +10,7 @@ impl Config {
         if out_dir.exists() {
             fs::create_dir_all(&out_dir)?;
         }
-        let data = read_from_url(&format!("{}/{}.tar.zst", s3_addr(), self.name()))?;
+        let data = read_from_url(&format!("{}/{}.tar.zst", s3_addr(), self))?;
         let zstd = zstd::stream::read::Decoder::new(data.as_slice())?;
         let mut arc = tar::Archive::new(zstd);
         arc.unpack(&out_dir)?;

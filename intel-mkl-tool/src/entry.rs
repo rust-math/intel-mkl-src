@@ -88,7 +88,7 @@ impl Entry {
         // pkg-config
         if let Ok(_) = pkg_config::Config::new()
             .cargo_metadata(false)
-            .probe(&config.name())
+            .probe(&config.to_string())
         {
             return Ok(Self {
                 config,
@@ -97,7 +97,7 @@ impl Entry {
         }
 
         // $XDG_DATA_HOME/intel-mkl-tool
-        let path = xdg_home_path().join(config.name());
+        let path = xdg_home_path().join(config.to_string());
         targets.seek(&path);
 
         // $MKLROOT
@@ -130,12 +130,12 @@ impl Entry {
             });
         } else {
             // None found
-            bail!("No library found for {}", config.name());
+            bail!("No library found for {}", config);
         }
     }
 
     pub fn name(&self) -> String {
-        self.config.name()
+        self.config.to_string()
     }
 
     pub fn found_files(&self) -> Vec<(PathBuf, String)> {
@@ -225,7 +225,7 @@ impl Entry {
             }
             EntryTarget::PkgConfig => {
                 pkg_config::Config::new()
-                    .probe(&self.config.name())
+                    .probe(&self.config.to_string())
                     .unwrap();
             }
         }

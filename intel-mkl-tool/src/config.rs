@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use derive_more::Display;
+use std::fmt;
 
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
@@ -12,36 +12,69 @@ pub const VALID_CONFIGS: &[&str] = &[
     "mkl-static-lp64-seq",
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Display)]
+/// How to link MKL
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LinkType {
-    #[display(fmt = "static")]
     Static,
-    #[display(fmt = "dynamic")]
     Shared,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Display)]
+impl fmt::Display for LinkType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LinkType::Static => write!(f, "static"),
+            LinkType::Shared => write!(f, "dynamic"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Interface {
-    #[display(fmt = "lp64")]
     LP64,
-    #[display(fmt = "ilp64")]
     ILP64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Display)]
+impl fmt::Display for Interface {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Interface::LP64 => write!(f, "lp64"),
+            Interface::ILP64 => write!(f, "ilp64"),
+        }
+    }
+}
+
+/// How to manage thread(s)
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Threading {
-    #[display(fmt = "iomp")]
+    /// Use iomp5, Intel OpenMP runtime.
     OpenMP,
-    #[display(fmt = "seq")]
+    /// No OpenMP runtime.
     Sequential,
 }
 
-/// Configure for linking, downloading and packaging Intel MKL
+impl fmt::Display for Threading {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Threading::OpenMP => write!(f, "iomp"),
+            Threading::Sequential => write!(f, "seq"),
+        }
+    }
+}
+
+/// Configuration for linking Intel MKL, e.g. `mkl-static-lp64-seq`
+///
+/// There are 2x2x2=8 combinations of [LinkType], [Interface], and [Threading].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Config {
     pub link: LinkType,
     pub index_size: Interface,
     pub parallel: Threading,
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
+    }
 }
 
 impl Config {
@@ -85,11 +118,6 @@ impl Config {
             .iter()
             .map(|name| Self::from_str(name).unwrap())
             .collect()
-    }
-
-    /// identifier used in pkg-config
-    pub fn name(&self) -> String {
-        format!("mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
     }
 
     /// Common components
@@ -168,7 +196,7 @@ mod tests {
     fn name_to_config_to_name() -> Result<()> {
         for name in VALID_CONFIGS {
             let cfg = Config::from_str(name)?;
-            assert_eq!(&cfg.name(), name);
+            assert_eq!(&cfg.to_string(), name);
         }
         Ok(())
     }
