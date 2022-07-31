@@ -16,29 +16,35 @@ pub const VALID_CONFIGS: &[&str] = &[
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LinkType {
     Static,
-    Shared,
+    Dynamic,
 }
 
 impl fmt::Display for LinkType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LinkType::Static => write!(f, "static"),
-            LinkType::Shared => write!(f, "dynamic"),
+            LinkType::Dynamic => write!(f, "dynamic"),
         }
     }
 }
 
+/// Data model of library
+///
+/// Array index of some APIs in MKL are defined by `int` in C,
+/// whose size is not fixed.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Interface {
+pub enum DataModel {
+    /// `long` and pointer are 64bit, i.e. `sizeof(int) == 4`
     LP64,
+    /// `int`, `long` and pointer are 64bit, i.e. `sizeof(int) == 8`
     ILP64,
 }
 
-impl fmt::Display for Interface {
+impl fmt::Display for DataModel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Interface::LP64 => write!(f, "lp64"),
-            Interface::ILP64 => write!(f, "ilp64"),
+            DataModel::LP64 => write!(f, "lp64"),
+            DataModel::ILP64 => write!(f, "ilp64"),
         }
     }
 }
@@ -61,13 +67,13 @@ impl fmt::Display for Threading {
     }
 }
 
-/// Configuration for linking Intel MKL, e.g. `mkl-static-lp64-seq`
+/// Configuration for Intel MKL, e.g. `mkl-static-lp64-seq`
 ///
-/// There are 2x2x2=8 combinations of [LinkType], [Interface], and [Threading].
+/// There are 2x2x2=8 combinations of [LinkType], [DataModel], and [Threading].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Config {
     pub link: LinkType,
-    pub index_size: Interface,
+    pub index_size: DataModel,
     pub parallel: Threading,
 }
 
@@ -90,13 +96,13 @@ impl Config {
 
         let link = match parts[1] {
             "static" => LinkType::Static,
-            "dynamic" => LinkType::Shared,
+            "dynamic" => LinkType::Dynamic,
             another => bail!("Invalid link spec: {}", another),
         };
 
         let index_size = match parts[2] {
-            "lp64" => Interface::LP64,
-            "ilp64" => Interface::ILP64,
+            "lp64" => DataModel::LP64,
+            "ilp64" => DataModel::ILP64,
             another => bail!("Invalid index spec: {}", another),
         };
 
@@ -129,10 +135,10 @@ impl Config {
     pub fn libs(&self) -> Vec<String> {
         let mut libs = Vec::new();
         match self.index_size {
-            Interface::LP64 => {
+            DataModel::LP64 => {
                 libs.push("mkl_intel_lp64".into());
             }
-            Interface::ILP64 => {
+            DataModel::ILP64 => {
                 libs.push("mkl_intel_ilp64".into());
             }
         };
@@ -158,7 +164,7 @@ impl Config {
     pub fn additional_libs(&self) -> Vec<String> {
         match self.link {
             LinkType::Static => Vec::new(),
-            LinkType::Shared => {
+            LinkType::Dynamic => {
                 let mut libs = Vec::new();
                 for prefix in &["mkl", "mkl_vml"] {
                     for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
@@ -185,7 +191,7 @@ mod tests {
             cfg,
             Config {
                 link: LinkType::Static,
-                index_size: Interface::LP64,
+                index_size: DataModel::LP64,
                 parallel: Threading::OpenMP
             }
         );

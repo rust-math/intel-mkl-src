@@ -21,7 +21,7 @@ impl Targets {
         {
             let target = match config.link {
                 LinkType::Static => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC),
-                LinkType::Shared => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
+                LinkType::Dynamic => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
             };
             targets.insert(target, None);
         }
@@ -217,7 +217,7 @@ impl Entry {
                         LinkType::Static => {
                             println!("cargo:rustc-link-lib=static={}", lib);
                         }
-                        LinkType::Shared => {
+                        LinkType::Dynamic => {
                             println!("cargo:rustc-link-lib=dylib={}", lib);
                         }
                     }
