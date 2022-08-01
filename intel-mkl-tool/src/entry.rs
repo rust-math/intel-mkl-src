@@ -6,6 +6,7 @@ use std::{
     fs,
     io::{self, BufRead},
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 #[derive(Debug, Deref)]

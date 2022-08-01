@@ -43,6 +43,7 @@ fn read_from_url(url: &str) -> Result<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     macro_rules! impl_test_download {
         ($name:expr) => {

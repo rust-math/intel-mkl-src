@@ -1,6 +1,6 @@
 use anyhow::{bail, Result};
 use intel_mkl_tool::*;
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, str::FromStr};
 use structopt::StructOpt;
 
 /// CLI tool for intel-mkl crate

@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
@@ -34,6 +34,17 @@ impl Default for LinkType {
     }
 }
 
+impl FromStr for LinkType {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self> {
+        Ok(match input {
+            "static" => LinkType::Static,
+            "dynamic" => LinkType::Dynamic,
+            another => bail!("Invalid link spec: {}", another),
+        })
+    }
+}
+
 /// Data model of library
 ///
 /// Array index of some APIs in MKL are defined by `int` in C,
@@ -61,6 +72,17 @@ impl Default for DataModel {
     }
 }
 
+impl FromStr for DataModel {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self> {
+        Ok(match input {
+            "lp64" => DataModel::LP64,
+            "ilp64" => DataModel::ILP64,
+            another => bail!("Invalid index spec: {}", another),
+        })
+    }
+}
+
 /// How to manage thread(s)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Threading {
@@ -82,6 +104,17 @@ impl fmt::Display for Threading {
             Threading::OpenMP => write!(f, "iomp"),
             Threading::Sequential => write!(f, "seq"),
         }
+    }
+}
+
+impl FromStr for Threading {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self> {
+        Ok(match input {
+            "iomp" => Threading::OpenMP,
+            "seq" => Threading::Sequential,
+            another => bail!("Invalid parallel spec: {}", another),
+        })
     }
 }
 
@@ -111,42 +144,25 @@ impl Default for Config {
     }
 }
 
-impl Config {
-    pub fn from_str(name: &str) -> Result<Self> {
+impl FromStr for Config {
+    type Err = anyhow::Error;
+    fn from_str(name: &str) -> Result<Self> {
         let parts: Vec<_> = name.split("-").collect();
         if parts.len() != 4 {
             bail!("Invalid name: {}", name);
         }
-
         if parts[0] != "mkl" {
             bail!("Name must start with 'mkl': {}", name);
         }
-
-        let link = match parts[1] {
-            "static" => LinkType::Static,
-            "dynamic" => LinkType::Dynamic,
-            another => bail!("Invalid link spec: {}", another),
-        };
-
-        let index_size = match parts[2] {
-            "lp64" => DataModel::LP64,
-            "ilp64" => DataModel::ILP64,
-            another => bail!("Invalid index spec: {}", another),
-        };
-
-        let parallel = match parts[3] {
-            "iomp" => Threading::OpenMP,
-            "seq" => Threading::Sequential,
-            another => bail!("Invalid parallel spec: {}", another),
-        };
-
         Ok(Config {
-            link,
-            index_size,
-            parallel,
+            link: LinkType::from_str(&parts[1])?,
+            index_size: DataModel::from_str(&parts[2])?,
+            parallel: Threading::from_str(&parts[3])?,
         })
     }
+}
 
+impl Config {
     pub fn possibles() -> Vec<Self> {
         VALID_CONFIGS
             .iter()

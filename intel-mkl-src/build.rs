@@ -24,7 +24,7 @@
 
 use anyhow::{bail, Result};
 use intel_mkl_tool::*;
-use std::{env, path::PathBuf};
+use std::{env, path::PathBuf, str::FromStr};
 
 #[cfg(feature = "mkl-static-lp64-iomp")]
 const MKL_CONFIG: &str = "mkl-static-lp64-iomp";
