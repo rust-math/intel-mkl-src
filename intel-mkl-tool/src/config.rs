@@ -147,7 +147,7 @@ impl Default for Config {
 impl FromStr for Config {
     type Err = anyhow::Error;
     fn from_str(name: &str) -> Result<Self> {
-        let parts: Vec<_> = name.split("-").collect();
+        let parts: Vec<_> = name.split('-').collect();
         if parts.len() != 4 {
             bail!("Invalid name: {}", name);
         }
@@ -155,9 +155,9 @@ impl FromStr for Config {
             bail!("Name must start with 'mkl': {}", name);
         }
         Ok(Config {
-            link: LinkType::from_str(&parts[1])?,
-            index_size: DataModel::from_str(&parts[2])?,
-            parallel: Threading::from_str(&parts[3])?,
+            link: LinkType::from_str(parts[1])?,
+            index_size: DataModel::from_str(parts[2])?,
+            parallel: Threading::from_str(parts[3])?,
         })
     }
 }

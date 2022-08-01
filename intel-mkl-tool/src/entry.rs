@@ -102,7 +102,7 @@ impl Entry {
         targets.seek(&path);
 
         // $MKLROOT
-        let mkl_root = std::env::var("MKLROOT").map(|path| PathBuf::from(path));
+        let mkl_root = std::env::var("MKLROOT").map(PathBuf::from);
         if let Ok(path) = mkl_root {
             if path.exists() {
                 targets.seek(path.join("lib/intel64"));
@@ -125,10 +125,10 @@ impl Entry {
         }
 
         if targets.found_any() {
-            return Ok(Self {
+            Ok(Self {
                 config,
                 target: EntryTarget::Manual(targets),
-            });
+            })
         } else {
             // None found
             bail!("No library found for {}", config);
@@ -187,7 +187,7 @@ impl Entry {
                     if !line.starts_with("#define") {
                         continue;
                     }
-                    let ss: Vec<&str> = line.split(" ").collect();
+                    let ss: Vec<&str> = line.split(' ').collect();
                     match ss[1] {
                         "__INTEL_MKL__" => year = ss[2].parse()?,
                         "__INTEL_MKL_UPDATE__" => update = ss[2].parse()?,

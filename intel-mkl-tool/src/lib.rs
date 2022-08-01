@@ -105,14 +105,14 @@ mod package;
 pub use config::*;
 pub use entry::*;
 
-const S3_ADDR: &'static str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
+const S3_ADDR: &str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
 
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod mkl {
     pub const OS: &str = "linux";
-    pub const EXTENSION_STATIC: &'static str = "a";
-    pub const EXTENSION_SHARED: &'static str = "so";
-    pub const PREFIX: &'static str = "lib";
+    pub const EXTENSION_STATIC: &str = "a";
+    pub const EXTENSION_SHARED: &str = "so";
+    pub const PREFIX: &str = "lib";
     pub const VERSION_YEAR: u32 = 2020;
     pub const VERSION_UPDATE: u32 = 1;
 }
