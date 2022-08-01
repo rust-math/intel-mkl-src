@@ -6,6 +6,7 @@ use std::{
     fs,
     io::{self, BufRead},
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 #[derive(Debug, Deref)]
@@ -21,7 +22,7 @@ impl Targets {
         {
             let target = match config.link {
                 LinkType::Static => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_STATIC),
-                LinkType::Shared => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
+                LinkType::Dynamic => format!("{}{}.{}", mkl::PREFIX, name, mkl::EXTENSION_SHARED),
             };
             targets.insert(target, None);
         }
@@ -88,7 +89,7 @@ impl Entry {
         // pkg-config
         if let Ok(_) = pkg_config::Config::new()
             .cargo_metadata(false)
-            .probe(&config.name())
+            .probe(&config.to_string())
         {
             return Ok(Self {
                 config,
@@ -97,11 +98,11 @@ impl Entry {
         }
 
         // $XDG_DATA_HOME/intel-mkl-tool
-        let path = xdg_home_path().join(config.name());
+        let path = xdg_home_path().join(config.to_string());
         targets.seek(&path);
 
         // $MKLROOT
-        let mkl_root = std::env::var("MKLROOT").map(|path| PathBuf::from(path));
+        let mkl_root = std::env::var("MKLROOT").map(PathBuf::from);
         if let Ok(path) = mkl_root {
             if path.exists() {
                 targets.seek(path.join("lib/intel64"));
@@ -124,18 +125,18 @@ impl Entry {
         }
 
         if targets.found_any() {
-            return Ok(Self {
+            Ok(Self {
                 config,
                 target: EntryTarget::Manual(targets),
-            });
+            })
         } else {
             // None found
-            bail!("No library found for {}", config.name());
+            bail!("No library found for {}", config);
         }
     }
 
     pub fn name(&self) -> String {
-        self.config.name()
+        self.config.to_string()
     }
 
     pub fn found_files(&self) -> Vec<(PathBuf, String)> {
@@ -186,7 +187,7 @@ impl Entry {
                     if !line.starts_with("#define") {
                         continue;
                     }
-                    let ss: Vec<&str> = line.split(" ").collect();
+                    let ss: Vec<&str> = line.split(' ').collect();
                     match ss[1] {
                         "__INTEL_MKL__" => year = ss[2].parse()?,
                         "__INTEL_MKL_UPDATE__" => update = ss[2].parse()?,
@@ -217,7 +218,7 @@ impl Entry {
                         LinkType::Static => {
                             println!("cargo:rustc-link-lib=static={}", lib);
                         }
-                        LinkType::Shared => {
+                        LinkType::Dynamic => {
                             println!("cargo:rustc-link-lib=dylib={}", lib);
                         }
                     }
@@ -225,7 +226,7 @@ impl Entry {
             }
             EntryTarget::PkgConfig => {
                 pkg_config::Config::new()
-                    .probe(&self.config.name())
+                    .probe(&self.config.to_string())
                     .unwrap();
             }
         }

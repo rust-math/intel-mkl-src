@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use derive_more::Display;
+use std::{fmt, str::FromStr};
 
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
@@ -12,84 +12,162 @@ pub const VALID_CONFIGS: &[&str] = &[
     "mkl-static-lp64-seq",
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Display)]
+/// How to link MKL
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LinkType {
-    #[display(fmt = "static")]
     Static,
-    #[display(fmt = "dynamic")]
-    Shared,
+    Dynamic,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Display)]
-pub enum Interface {
-    #[display(fmt = "lp64")]
+impl fmt::Display for LinkType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LinkType::Static => write!(f, "static"),
+            LinkType::Dynamic => write!(f, "dynamic"),
+        }
+    }
+}
+
+impl Default for LinkType {
+    fn default() -> Self {
+        LinkType::Static
+    }
+}
+
+impl FromStr for LinkType {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self> {
+        Ok(match input {
+            "static" => LinkType::Static,
+            "dynamic" => LinkType::Dynamic,
+            another => bail!("Invalid link spec: {}", another),
+        })
+    }
+}
+
+/// Data model of library
+///
+/// Array index of some APIs in MKL are defined by `int` in C,
+/// whose size is not fixed.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DataModel {
+    /// `long` and pointer are 64bit, i.e. `sizeof(int) == 4`
     LP64,
-    #[display(fmt = "ilp64")]
+    /// `int`, `long` and pointer are 64bit, i.e. `sizeof(int) == 8`
     ILP64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Display)]
+impl fmt::Display for DataModel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DataModel::LP64 => write!(f, "lp64"),
+            DataModel::ILP64 => write!(f, "ilp64"),
+        }
+    }
+}
+
+impl Default for DataModel {
+    fn default() -> Self {
+        DataModel::ILP64
+    }
+}
+
+impl FromStr for DataModel {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self> {
+        Ok(match input {
+            "lp64" => DataModel::LP64,
+            "ilp64" => DataModel::ILP64,
+            another => bail!("Invalid index spec: {}", another),
+        })
+    }
+}
+
+/// How to manage thread(s)
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Threading {
-    #[display(fmt = "iomp")]
+    /// Use iomp5, Intel OpenMP runtime.
     OpenMP,
-    #[display(fmt = "seq")]
+    /// No OpenMP runtime.
     Sequential,
 }
 
-/// Configure for linking, downloading and packaging Intel MKL
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Config {
-    pub link: LinkType,
-    pub index_size: Interface,
-    pub parallel: Threading,
+impl Default for Threading {
+    fn default() -> Self {
+        Threading::Sequential
+    }
 }
 
-impl Config {
-    pub fn from_str(name: &str) -> Result<Self> {
-        let parts: Vec<_> = name.split("-").collect();
-        if parts.len() != 4 {
-            bail!("Invalid name: {}", name);
+impl fmt::Display for Threading {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Threading::OpenMP => write!(f, "iomp"),
+            Threading::Sequential => write!(f, "seq"),
         }
+    }
+}
 
-        if parts[0] != "mkl" {
-            bail!("Name must start with 'mkl': {}", name);
-        }
-
-        let link = match parts[1] {
-            "static" => LinkType::Static,
-            "dynamic" => LinkType::Shared,
-            another => bail!("Invalid link spec: {}", another),
-        };
-
-        let index_size = match parts[2] {
-            "lp64" => Interface::LP64,
-            "ilp64" => Interface::ILP64,
-            another => bail!("Invalid index spec: {}", another),
-        };
-
-        let parallel = match parts[3] {
+impl FromStr for Threading {
+    type Err = anyhow::Error;
+    fn from_str(input: &str) -> Result<Self> {
+        Ok(match input {
             "iomp" => Threading::OpenMP,
             "seq" => Threading::Sequential,
             another => bail!("Invalid parallel spec: {}", another),
-        };
-
-        Ok(Config {
-            link,
-            index_size,
-            parallel,
         })
     }
+}
 
+/// Configuration for Intel MKL, e.g. `mkl-static-lp64-seq`
+///
+/// There are 2x2x2=8 combinations of [LinkType], [DataModel], and [Threading].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Config {
+    pub link: LinkType,
+    pub index_size: DataModel,
+    pub parallel: Threading,
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            link: LinkType::default(),
+            index_size: DataModel::default(),
+            parallel: Threading::default(),
+        }
+    }
+}
+
+impl FromStr for Config {
+    type Err = anyhow::Error;
+    fn from_str(name: &str) -> Result<Self> {
+        let parts: Vec<_> = name.split('-').collect();
+        if parts.len() != 4 {
+            bail!("Invalid name: {}", name);
+        }
+        if parts[0] != "mkl" {
+            bail!("Name must start with 'mkl': {}", name);
+        }
+        Ok(Config {
+            link: LinkType::from_str(parts[1])?,
+            index_size: DataModel::from_str(parts[2])?,
+            parallel: Threading::from_str(parts[3])?,
+        })
+    }
+}
+
+impl Config {
     pub fn possibles() -> Vec<Self> {
         VALID_CONFIGS
             .iter()
             .map(|name| Self::from_str(name).unwrap())
             .collect()
-    }
-
-    /// identifier used in pkg-config
-    pub fn name(&self) -> String {
-        format!("mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
     }
 
     /// Common components
@@ -101,10 +179,10 @@ impl Config {
     pub fn libs(&self) -> Vec<String> {
         let mut libs = Vec::new();
         match self.index_size {
-            Interface::LP64 => {
+            DataModel::LP64 => {
                 libs.push("mkl_intel_lp64".into());
             }
-            Interface::ILP64 => {
+            DataModel::ILP64 => {
                 libs.push("mkl_intel_ilp64".into());
             }
         };
@@ -130,7 +208,7 @@ impl Config {
     pub fn additional_libs(&self) -> Vec<String> {
         match self.link {
             LinkType::Static => Vec::new(),
-            LinkType::Shared => {
+            LinkType::Dynamic => {
                 let mut libs = Vec::new();
                 for prefix in &["mkl", "mkl_vml"] {
                     for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
@@ -157,7 +235,7 @@ mod tests {
             cfg,
             Config {
                 link: LinkType::Static,
-                index_size: Interface::LP64,
+                index_size: DataModel::LP64,
                 parallel: Threading::OpenMP
             }
         );
@@ -168,7 +246,7 @@ mod tests {
     fn name_to_config_to_name() -> Result<()> {
         for name in VALID_CONFIGS {
             let cfg = Config::from_str(name)?;
-            assert_eq!(&cfg.name(), name);
+            assert_eq!(&cfg.to_string(), name);
         }
         Ok(())
     }
