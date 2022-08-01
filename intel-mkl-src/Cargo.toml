@@ -31,8 +31,6 @@ mkl-dynamic-ilp64-seq  = []
 
 # Enable downloading from AWS S3 when system MKL not found
 download = ["intel-mkl-tool/archive"]
-# (Experimental) Cache download archive ad $XDG_DATA_HOME/intel-mkl-tool/
-xdg-data-home = []
 
 [build-dependencies]
 anyhow = "1.0.58"
