@@ -28,6 +28,12 @@ impl fmt::Display for LinkType {
     }
 }
 
+impl Default for LinkType {
+    fn default() -> Self {
+        LinkType::Static
+    }
+}
+
 /// Data model of library
 ///
 /// Array index of some APIs in MKL are defined by `int` in C,
@@ -49,6 +55,12 @@ impl fmt::Display for DataModel {
     }
 }
 
+impl Default for DataModel {
+    fn default() -> Self {
+        DataModel::ILP64
+    }
+}
+
 /// How to manage thread(s)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Threading {
@@ -56,6 +68,12 @@ pub enum Threading {
     OpenMP,
     /// No OpenMP runtime.
     Sequential,
+}
+
+impl Default for Threading {
+    fn default() -> Self {
+        Threading::Sequential
+    }
 }
 
 impl fmt::Display for Threading {
@@ -80,6 +98,16 @@ pub struct Config {
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            link: LinkType::default(),
+            index_size: DataModel::default(),
+            parallel: Threading::default(),
+        }
     }
 }
 
