@@ -1,4 +1,4 @@
-use crate::{mkl, xdg_home_path, Config, LinkType, VALID_CONFIGS};
+use crate::{mkl, Config, LinkType, VALID_CONFIGS};
 use anyhow::{bail, Result};
 use derive_more::Deref;
 use std::{
@@ -72,8 +72,6 @@ impl Entry {
     ///   - This exists only when the previous build downloads archive here
     /// - pkg-config `${name}`
     ///   - Installed by package manager or official downloader
-    /// - `$XDG_DATA_HOME/intel-mkl-tool/${name}`
-    ///   - Downloaded by this crate
     ///
     /// Returns error if no library found
     ///
@@ -96,10 +94,6 @@ impl Entry {
                 target: EntryTarget::PkgConfig,
             });
         }
-
-        // $XDG_DATA_HOME/intel-mkl-tool
-        let path = xdg_home_path().join(config.to_string());
-        targets.seek(&path);
 
         // $MKLROOT
         let mkl_root = std::env::var("MKLROOT").map(PathBuf::from);
@@ -156,7 +150,7 @@ impl Entry {
 
     /// Get MKL version info from its C header
     ///
-    /// - This will not work for OUT_DIR, XDG_DATA_HOME, or Pkgconfig entry,
+    /// - This will not work for OUT_DIR, or Pkgconfig entry,
     ///   and returns Error in these cases
     pub fn version(&self) -> Result<(u32, u32)> {
         for (path, _) in &self.found_files() {

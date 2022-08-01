@@ -55,11 +55,7 @@ fn main() -> Result<()> {
     // download if not found
     #[cfg(feature = "download")]
     {
-        let path = if cfg!(feature = "xdg-data-home") {
-            xdg_home_path()
-        } else {
-            PathBuf::from(env::var("OUT_DIR").unwrap())
-        };
+        let path = PathBuf::from(env::var("OUT_DIR").unwrap());
         println!(
             r#"cargo:warning="Download Intel MKL archive into {}""#,
             path.display()

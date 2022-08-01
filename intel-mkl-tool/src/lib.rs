@@ -92,8 +92,6 @@
 
 #![cfg_attr(not(feature = "archive"), allow(dead_code))]
 
-use std::path::PathBuf;
-
 mod config;
 mod entry;
 
@@ -145,12 +143,4 @@ fn s3_addr() -> String {
         mkl::VERSION_YEAR,
         mkl::VERSION_UPDATE
     )
-}
-
-pub fn xdg_home_path() -> PathBuf {
-    dirs::data_local_dir().unwrap().join(format!(
-        "intel-mkl-tool/{}.{}",
-        mkl::VERSION_YEAR,
-        mkl::VERSION_UPDATE
-    ))
 }

@@ -55,7 +55,6 @@ This crate seeks system MKL libraries, e.g. installed by [apt], [yum], or offici
     ```
     pkg-config --libs mkl-dynamic-lp64-iomp
     ```
-- (experimental) Seek `${XDG_DATA_HOME}/intel-mkl-tool`
 - Seek a directory set by `${MKLROOT}` environment variable
 - Seek default installation path
   - `/opt/intel/mkl` for Linux
