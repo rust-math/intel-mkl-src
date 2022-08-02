@@ -21,18 +21,14 @@ jobs:
           - mkl-dynamic-ilp64-iomp
           - mkl-dynamic-ilp64-seq
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0
     steps:
       - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: "1.56.0"
-          profile: minimal
-          default: true
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: test
           args: >
             --manifest-path=intel-mkl-sys/Cargo.toml
             --no-default-features
-            --features=${{ matrix.feature }},download
+            --features=${{ matrix.feature }}
