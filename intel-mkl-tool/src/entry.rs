@@ -46,8 +46,9 @@ impl Library {
 
     /// Seek MKL libraries in the given directory.
     ///
-    /// This will seek the directory recursively until finding MKL libraries.
-    /// This do not follow symbolic links.
+    /// - This will seek the directory recursively until finding MKL libraries,
+    ///   but do not follow symbolic links.
+    /// - This will not seek directory named `ia32*`
     ///
     pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Option<Self> {
         let mut library_dir = None;
@@ -65,7 +66,25 @@ impl Library {
                 ),
                 _ => continue,
             };
-            let dir = path.parent().unwrap().to_owned();
+            // Skip directory for ia32
+            if path.components().any(|c| {
+                if let std::path::Component::Normal(c) = c {
+                    if c.to_str()
+                        .expect("Non-UTF8 directory name")
+                        .starts_with("ia32")
+                    {
+                        return true;
+                    }
+                }
+                false
+            }) {
+                continue;
+            }
+
+            let dir = path
+                .parent()
+                .expect("parent must exist here since this is under `root_dir`")
+                .to_owned();
             if stem == "mkl" && ext == "h" {
                 include_dir = Some(dir);
                 continue;
