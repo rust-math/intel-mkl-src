@@ -47,10 +47,60 @@ impl Library {
     /// Seek MKL libraries in the given directory.
     ///
     /// This will seek the directory recursively until finding MKL libraries.
-    /// Returns `Ok(None)` if not found. `Err` means IO error while seeking.
+    /// This do not follow symbolic links.
     ///
-    pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Result<Option<Self>> {
-        todo!()
+    pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Option<Self> {
+        let mut library_dir = None;
+        let mut include_dir = None;
+        let mut iomp5_dir = None;
+        for entry in walkdir::WalkDir::new(root_dir) {
+            let path = entry.unwrap().into_path();
+            if path.is_dir() {
+                continue;
+            }
+            let (stem, ext) = match (path.file_stem(), path.extension()) {
+                (Some(stem), Some(ext)) => (
+                    stem.to_str().expect("Non UTF8 filename"),
+                    ext.to_str().expect("Non UTF8 filename"),
+                ),
+                _ => continue,
+            };
+            let dir = path.parent().unwrap().to_owned();
+            if stem == "mkl" && ext == "h" {
+                include_dir = Some(dir);
+                continue;
+            }
+            let name = if let Some(name) = stem.strip_prefix(mkl::PREFIX) {
+                name
+            } else {
+                continue;
+            };
+            match (config.link, ext) {
+                (LinkType::Static, mkl::EXTENSION_STATIC) => match name {
+                    "mkl_core" => library_dir = Some(dir),
+                    "iomp5" => iomp5_dir = Some(dir),
+                    _ => {}
+                },
+                (LinkType::Dynamic, mkl::EXTENSION_SHARED) => match name {
+                    "mkl_rt" => library_dir = Some(dir),
+                    "iomp5" => iomp5_dir = Some(dir),
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
+        if library_dir == iomp5_dir {
+            iomp5_dir = None;
+        }
+        match (library_dir, include_dir) {
+            (Some(library_dir), Some(include_dir)) => Some(Library::Directory {
+                config,
+                include_dir,
+                library_dir,
+                iomp5_dir,
+            }),
+            _ => None,
+        }
     }
 
     /// Seek MKL in system
@@ -318,5 +368,14 @@ mod tests {
     #[test]
     fn with_mkl_availables() {
         assert_eq!(Entry::available().len(), 8);
+    }
+
+    /// Seek /opt/intel in Linux system
+    #[ignore]
+    #[test]
+    fn seek_opt_intel() {
+        let cfg = Config::from_str("mkl-static-lp64-seq").unwrap();
+        let lib = Library::seek_directory(cfg, "/opt/intel").unwrap();
+        dbg!(lib);
     }
 }
