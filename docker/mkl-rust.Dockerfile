@@ -29,3 +29,4 @@ RUN sed -i "s/MKLROOT/prefix/g" ${PKG_CONFIG_PATH}/*.pc
 # Setup basic rust development tools
 WORKDIR /src
 RUN cargo install cargo-tarpaulin
+RUN rustup component add rustfmt clippy

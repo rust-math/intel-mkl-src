@@ -9,15 +9,10 @@ on:
 jobs:
   check-format:
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0
     steps:
     - uses: actions/checkout@v1
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: "1.56.0"
-        profile: minimal
-        components: rustfmt
-        default: true
-        override: true
     - uses: actions-rs/cargo@v1
       with:
         command: fmt
@@ -25,15 +20,10 @@ jobs:
 
   clippy:
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0
     steps:
     - uses: actions/checkout@v1
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: "1.56.0"
-        profile: minimal
-        components: clippy
-        default: true
-        override: true
     - uses: actions-rs/cargo@v1
       with:
         command: clippy

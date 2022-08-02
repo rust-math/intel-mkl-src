@@ -95,19 +95,11 @@
 mod config;
 mod entry;
 
-#[cfg(feature = "archive")]
-mod download;
-#[cfg(feature = "archive")]
-mod package;
-
 pub use config::*;
 pub use entry::*;
 
-const S3_ADDR: &str = "https://s3-ap-northeast-1.amazonaws.com/rust-intel-mkl";
-
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod mkl {
-    pub const OS: &str = "linux";
     pub const EXTENSION_STATIC: &str = "a";
     pub const EXTENSION_SHARED: &str = "so";
     pub const PREFIX: &str = "lib";
@@ -133,14 +125,4 @@ mod mkl {
     pub const PREFIX: &'static str = "";
     pub const VERSION_YEAR: u32 = 2020;
     pub const VERSION_UPDATE: u32 = 1;
-}
-
-fn s3_addr() -> String {
-    format!(
-        "{}/{}/{}.{}",
-        S3_ADDR,
-        mkl::OS,
-        mkl::VERSION_YEAR,
-        mkl::VERSION_UPDATE
-    )
 }

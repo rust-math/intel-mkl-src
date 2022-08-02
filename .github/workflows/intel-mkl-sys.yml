@@ -7,58 +7,6 @@ on:
   pull_request: {}
 
 jobs:
-  windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        feature:
-          - mkl-static-lp64-seq
-          - mkl-static-ilp64-seq
-          - mkl-dynamic-lp64-seq
-          - mkl-dynamic-ilp64-seq
-    runs-on: windows-2019
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: "1.56.0"
-          profile: minimal
-          default: true
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: >
-            --manifest-path=intel-mkl-sys/Cargo.toml
-            --no-default-features
-            --features=${{ matrix.feature }},download
-
-  macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        feature:
-          - mkl-dynamic-lp64-iomp
-          - mkl-dynamic-lp64-seq
-          - mkl-dynamic-ilp64-iomp
-          - mkl-dynamic-ilp64-seq
-    runs-on: macos-10.15
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: "1.56.0"
-          profile: minimal
-          default: true
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: >
-            --manifest-path=intel-mkl-sys/Cargo.toml
-            --no-default-features
-            --features=${{ matrix.feature }},download
-
   linux:
     strategy:
       fail-fast: false
@@ -73,18 +21,14 @@ jobs:
           - mkl-dynamic-ilp64-iomp
           - mkl-dynamic-ilp64-seq
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0
     steps:
       - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: "1.56.0"
-          profile: minimal
-          default: true
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: test
           args: >
             --manifest-path=intel-mkl-sys/Cargo.toml
             --no-default-features
-            --features=${{ matrix.feature }},download
+            --features=${{ matrix.feature }}

@@ -12,8 +12,7 @@ license     = "MIT"
 
 [features]
 default = ["cli"]
-archive = ["curl", "tar", "zstd"]
-cli     = ["structopt", "archive"]
+cli     = ["structopt"]
 
 [dependencies]
 anyhow = "1.0.58"
@@ -21,11 +20,6 @@ derive_more = "0.99.17"
 dirs = "4.0.0"
 glob = "0.3.0"
 pkg-config = "0.3.25"
-
-# archive
-curl = { version = "0.4.44", optional = true }
-tar  = { version = "0.4.38", optional = true }
-zstd = { version = "0.11.2", optional = true }
 
 # CLI
 structopt = { version = "0.3.26", optional = true }
