@@ -158,17 +158,17 @@ impl Library {
     ///   - `C:/Program Files (x86)/IntelSWTools/` for Windows
     ///
     pub fn new(config: Config) -> Result<Self> {
-        if let Some(lib) = Self::pkg_config(config.clone()) {
+        if let Some(lib) = Self::pkg_config(config) {
             return Ok(lib);
         }
         if let Ok(mklroot) = std::env::var("MKLROOT") {
-            if let Some(lib) = Self::seek_directory(config.clone(), mklroot) {
+            if let Some(lib) = Self::seek_directory(config, mklroot) {
                 return Ok(lib);
             }
         }
         for path in ["/opt/intel", "C:/Program Files (x86)/IntelSWTools/"] {
             let path = Path::new(path);
-            if let Some(lib) = Self::seek_directory(config.clone(), path) {
+            if let Some(lib) = Self::seek_directory(config, path) {
                 return Ok(lib);
             }
         }
