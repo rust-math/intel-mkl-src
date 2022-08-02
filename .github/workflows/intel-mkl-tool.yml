@@ -24,24 +24,36 @@ jobs:
         profile: minimal
         default: true
         override: true
-    - uses: actions-rs/cargo@v1
+    - name: cargo test
+      uses: actions-rs/cargo@v1
       with:
         command: test
         args: --manifest-path=intel-mkl-tool/Cargo.toml
-      name: cargo-test
-    - uses: actions-rs/cargo@v1
+    - name: cargo test with no-default-features
+      uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --manifest-path=intel-mkl-tool/Cargo.toml --no-default-features
-      name: cargo-test no-default-features
+        args: >
+          --manifest-path=intel-mkl-tool/Cargo.toml
+          --no-default-features
 
-  docker:
-    runs-on: ubuntu-22.04
+  seek:
     strategy:
       fail-fast: false
       matrix:
-        target: ["test", "package", "seek", "seek-ubuntu", "seek-centos"]
+        image:
+          - mkl-rust
+          - mkl-ubuntu
+          - mkl-centos
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/intel-mkl-src/${{ matrix.image }}:1.56.0
     steps:
     - uses: actions/checkout@v1
-    - name: Test with mkl-rust container
-      run: make -C intel-mkl-tool ${{ matrix.target }}
+    - name: cargo run -- seek
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: >
+          --manifest-path=intel-mkl-tool/Cargo.toml
+          -- seek

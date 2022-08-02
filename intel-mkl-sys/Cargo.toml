@@ -12,7 +12,7 @@ keywords    = ["ffi"]
 license     = "MIT"
 
 [features]
-default = ["download", "mkl-static-ilp64-seq"]
+default = ["mkl-static-ilp64-seq"]
 
 # MKL config
 # https://software.intel.com/content/www/us/en/develop/articles/intel-math-kernel-library-intel-mkl-and-pkg-config-tool.html
@@ -24,9 +24,6 @@ mkl-dynamic-lp64-iomp  = ["intel-mkl-src/mkl-dynamic-lp64-iomp"]
 mkl-dynamic-lp64-seq   = ["intel-mkl-src/mkl-dynamic-lp64-seq"]
 mkl-dynamic-ilp64-iomp = ["intel-mkl-src/mkl-dynamic-ilp64-iomp"]
 mkl-dynamic-ilp64-seq  = ["intel-mkl-src/mkl-dynamic-ilp64-seq"]
-
-# Enable downloading from AWS S3 when not found
-download = ["intel-mkl-src/download"]
 
 [dependencies]
 intel-mkl-src = { path = "../intel-mkl-src", version = "0.7.0", default-features = false }
