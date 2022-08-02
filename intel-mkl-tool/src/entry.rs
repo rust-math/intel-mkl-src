@@ -9,26 +9,36 @@ use std::{
     str::FromStr,
 };
 
+/// A library found in system
 #[derive(Debug, Clone)]
-pub enum Entry2 {
+pub enum Library {
     PkgConfig {
         config: Config,
         lib: pkg_config::Library,
     },
     Directory {
         config: Config,
-        root_dir: PathBuf,
+        /// Directory where `mkl.h` and `mkl_version.h` exists
+        include_dir: PathBuf,
+        /// Directory where `libmkl_core.a` or `libmkl_rt.so` exists
+        library_dir: PathBuf,
+        /// Directory where `libiomp5.a` or `libiomp5.so` exists
+        ///
+        /// They are sometimes placed in different position.
+        /// Returns `None` if they exist on `library_dir`.
+        iomp5_dir: Option<PathBuf>,
     },
 }
 
-impl Entry2 {
-    pub fn try_pkg_config(config: Config) -> Option<Self> {
+impl Library {
+    /// Try to find MKL using pkg-config
+    pub fn pkg_config(config: Config) -> Option<Self> {
         if let Ok(lib) = pkg_config::Config::new()
             .cargo_metadata(false)
             .env_metadata(false)
             .probe(&config.to_string())
         {
-            Some(Entry2::PkgConfig { config, lib })
+            Some(Library::PkgConfig { config, lib })
         } else {
             None
         }
@@ -39,24 +49,44 @@ impl Entry2 {
     /// This will seek the directory recursively until finding MKL libraries.
     /// Returns `Ok(None)` if not found. `Err` means IO error while seeking.
     ///
-    pub fn seek_directory(_config: Config, dir_root: impl AsRef<Path>) -> Result<Option<Self>> {
-        let _dir = dir_root.as_ref();
+    pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Result<Option<Self>> {
         todo!()
     }
 
+    /// Seek MKL in system
+    ///
+    /// This try to find installed MKL in following order:
+    ///
+    /// - Ask to `pkg-config`
+    /// - Seek the directory specified by `$MKLROOT` environment variable
+    /// - Seek well-known directory
+    ///   - `/opt/intel` for Linux
+    ///   - `C:/Program Files (x86)/IntelSWTools/` for Windows
+    ///
     pub fn new(config: Config) -> Result<Self> {
         todo!()
     }
 
     pub fn config(&self) -> &Config {
         match self {
-            Entry2::PkgConfig { config, .. } => config,
-            Entry2::Directory { config, .. } => config,
+            Library::PkgConfig { config, .. } => config,
+            Library::Directory { config, .. } => config,
         }
     }
 
-    /// Found MKL version parsed from `mkl_version.h`, e.g. `(2020, 1)`
-    pub fn version(&self) -> (u32, u32) {
+    /// Found MKL version parsed from `mkl_version.h`
+    ///
+    /// `mkl_version.h` will define
+    ///
+    /// ```c
+    /// #define __INTEL_MKL__ 2020
+    /// #define __INTEL_MKL_MINOR__ 0
+    /// #define __INTEL_MKL_UPDATE__ 1
+    /// ```
+    ///
+    /// and this corresponds to `(2020, 0, 1)`
+    ///
+    pub fn version(&self) -> (u32, u32, u32) {
         todo!()
     }
 }
