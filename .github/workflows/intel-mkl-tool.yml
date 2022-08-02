@@ -35,30 +35,23 @@ jobs:
         args: --manifest-path=intel-mkl-tool/Cargo.toml --no-default-features
       name: cargo-test no-default-features
 
-  docker:
+  find_system_mkl:
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        target: ["test", "package", "seek", "seek-ubuntu", "seek-centos"]
-    steps:
-    - uses: actions/checkout@v1
-    - name: Test with mkl-rust container
-      run: make -C intel-mkl-tool ${{ matrix.target }}
-
-  seek-opt-intel:
-    runs-on: ubuntu-22.04
+        image: ["mkl-rust", "mkl-ubuntu", "mkl-centos"]
     container:
-      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0
+      image: ghcr.io/rust-math/intel-mkl-src/${{ matrix.image }}:1.56.0
     steps:
     - uses: actions/checkout@v1
     - uses: actions-rs/cargo@v1
-      name: cargo test seek_opt_intel
+      name: Seek /opt/intel
       with:
         command: test
-        args: >
-          --manifest-path=intel-mkl-tool/Cargo.toml
-          seek_opt_intel
-          --
-          --ignored
-          --show-output
+        args: --manifest-path=intel-mkl-tool/Cargo.toml seek_opt_intel -- --ignored --show-output
+    - uses: actions-rs/cargo@v1
+      name: Use pkg-config
+      with:
+        command: test
+        args: --manifest-path=intel-mkl-tool/Cargo.toml pkg_config -- --ignored --show-output

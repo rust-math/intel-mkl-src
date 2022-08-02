@@ -421,19 +421,22 @@ impl Entry {
 mod tests {
     use super::*;
 
-    /// Test all available MKL are detected
-    #[ignore]
-    #[test]
-    fn with_mkl_availables() {
-        assert_eq!(Entry::available().len(), 8);
-    }
-
     /// Seek /opt/intel in Linux system
     #[ignore]
     #[test]
     fn seek_opt_intel() {
-        let cfg = Config::from_str("mkl-static-lp64-seq").unwrap();
-        let lib = Library::seek_directory(cfg, "/opt/intel").unwrap();
-        dbg!(lib);
+        for cfg in Config::possibles() {
+            let lib = Library::seek_directory(cfg, "/opt/intel").unwrap();
+            dbg!(lib);
+        }
+    }
+
+    #[ignore]
+    #[test]
+    fn pkg_config() {
+        for cfg in Config::possibles() {
+            let lib = Library::pkg_config(cfg).unwrap();
+            dbg!(lib);
+        }
     }
 }
