@@ -51,6 +51,7 @@ impl Library {
     /// - This will not seek directory named `ia32*`
     ///
     pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Option<Self> {
+        let root_dir = root_dir.as_ref();
         let mut library_dir = None;
         let mut include_dir = None;
         let mut iomp5_dir = None;
@@ -96,13 +97,37 @@ impl Library {
             };
             match (config.link, ext) {
                 (LinkType::Static, mkl::EXTENSION_STATIC) => match name {
-                    "mkl_core" => library_dir = Some(dir),
-                    "iomp5" => iomp5_dir = Some(dir),
+                    "mkl_core" => {
+                        assert!(
+                            library_dir.replace(dir).is_none(),
+                            "Two or more MKL found in {}",
+                            root_dir.display()
+                        )
+                    }
+                    "iomp5" => {
+                        assert!(
+                            iomp5_dir.replace(dir).is_none(),
+                            "Two or more MKL found in {}",
+                            root_dir.display()
+                        )
+                    }
                     _ => {}
                 },
                 (LinkType::Dynamic, mkl::EXTENSION_SHARED) => match name {
-                    "mkl_rt" => library_dir = Some(dir),
-                    "iomp5" => iomp5_dir = Some(dir),
+                    "mkl_rt" => {
+                        assert!(
+                            library_dir.replace(dir).is_none(),
+                            "Two or more MKL found in {}",
+                            root_dir.display()
+                        )
+                    }
+                    "iomp5" => {
+                        assert!(
+                            iomp5_dir.replace(dir).is_none(),
+                            "Two or more MKL found in {}",
+                            root_dir.display()
+                        )
+                    }
                     _ => {}
                 },
                 _ => {}
