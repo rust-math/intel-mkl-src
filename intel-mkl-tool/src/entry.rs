@@ -158,7 +158,21 @@ impl Library {
     ///   - `C:/Program Files (x86)/IntelSWTools/` for Windows
     ///
     pub fn new(config: Config) -> Result<Self> {
-        todo!()
+        if let Some(lib) = Self::pkg_config(config.clone()) {
+            return Ok(lib);
+        }
+        if let Ok(mklroot) = std::env::var("MKLROOT") {
+            if let Some(lib) = Self::seek_directory(config.clone(), mklroot) {
+                return Ok(lib);
+            }
+        }
+        for path in ["/opt/intel", "C:/Program Files (x86)/IntelSWTools/"] {
+            let path = Path::new(path);
+            if let Some(lib) = Self::seek_directory(config.clone(), path) {
+                return Ok(lib);
+            }
+        }
+        bail!("Intel MKL not found in system");
     }
 
     pub fn config(&self) -> &Config {
