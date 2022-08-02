@@ -9,6 +9,58 @@ use std::{
     str::FromStr,
 };
 
+#[derive(Debug, Clone)]
+pub enum Entry2 {
+    PkgConfig {
+        config: Config,
+        lib: pkg_config::Library,
+    },
+    Directory {
+        config: Config,
+        root_dir: PathBuf,
+    },
+}
+
+impl Entry2 {
+    pub fn try_pkg_config(config: Config) -> Option<Self> {
+        if let Ok(lib) = pkg_config::Config::new()
+            .cargo_metadata(false)
+            .env_metadata(false)
+            .probe(&config.to_string())
+        {
+            Some(Entry2::PkgConfig { config, lib })
+        } else {
+            None
+        }
+    }
+
+    /// Seek MKL libraries in the given directory.
+    ///
+    /// This will seek the directory recursively until finding MKL libraries.
+    /// Returns `Ok(None)` if not found. `Err` means IO error while seeking.
+    ///
+    pub fn seek_directory(_config: Config, dir_root: impl AsRef<Path>) -> Result<Option<Self>> {
+        let _dir = dir_root.as_ref();
+        todo!()
+    }
+
+    pub fn new(config: Config) -> Result<Self> {
+        todo!()
+    }
+
+    pub fn config(&self) -> &Config {
+        match self {
+            Entry2::PkgConfig { config, .. } => config,
+            Entry2::Directory { config, .. } => config,
+        }
+    }
+
+    /// Found MKL version parsed from `mkl_version.h`, e.g. `(2020, 1)`
+    pub fn version(&self) -> (u32, u32) {
+        todo!()
+    }
+}
+
 #[derive(Debug, Deref)]
 struct Targets(HashMap<String, Option<PathBuf>>);
 
