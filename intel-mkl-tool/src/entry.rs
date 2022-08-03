@@ -196,8 +196,44 @@ impl Library {
     ///
     /// and this corresponds to `(2020, 0, 1)`
     ///
-    pub fn version(&self) -> (u32, u32, u32) {
-        todo!()
+    pub fn version(&self) -> Result<(u32, u32, u32)> {
+        let version_h = match self {
+            Library::PkgConfig { lib, .. } => {
+                let mut version_h = None;
+                for path in &lib.include_paths {
+                    let candidate = path.join("mkl_version.h");
+                    if candidate.exists() {
+                        version_h = Some(candidate);
+                    }
+                }
+                version_h.context("mkl_version.h not found in pkg-config")?
+            }
+            Library::Directory { include_dir, .. } => include_dir.join("mkl_version.h"),
+        };
+
+        let f = fs::File::open(version_h).context("Failed to open mkl_version.h")?;
+        let f = io::BufReader::new(f);
+        let mut year = None;
+        let mut minor = None;
+        let mut update = None;
+        for line in f.lines() {
+            if let Ok(line) = line {
+                if !line.starts_with("#define") {
+                    continue;
+                }
+                let ss: Vec<&str> = line.split(' ').collect();
+                match ss[1] {
+                    "__INTEL_MKL__" => year = Some(ss[2].parse()?),
+                    "__INTEL_MKL_MINOR__" => minor = Some(ss[2].parse()?),
+                    "__INTEL_MKL_UPDATE__" => update = Some(ss[2].parse()?),
+                    _ => continue,
+                }
+            }
+        }
+        match (year, minor, update) {
+            (Some(year), Some(minor), Some(update)) => Ok((year, minor, update)),
+            _ => bail!("Invalid mkl_version.h"),
+        }
     }
 }
 
@@ -428,8 +464,8 @@ mod tests {
     #[test]
     fn seek_opt_intel() {
         for cfg in Config::possibles() {
-            let lib = Library::seek_directory(cfg, "/opt/intel").unwrap();
-            dbg!(lib);
+            let lib = Library::seek_directory(cfg, "/opt/intel").unwrap().unwrap();
+            dbg!(lib.version().unwrap());
         }
     }
 
@@ -438,7 +474,7 @@ mod tests {
     fn pkg_config() {
         for cfg in Config::possibles() {
             let lib = Library::pkg_config(cfg).unwrap();
-            dbg!(lib);
+            dbg!(lib.version().unwrap());
         }
     }
 }
