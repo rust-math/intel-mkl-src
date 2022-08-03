@@ -1,5 +1,5 @@
 use crate::{mkl, Config, LinkType, VALID_CONFIGS};
-use anyhow::{bail, Result};
+use anyhow::{bail, ensure, Context, Result};
 use derive_more::Deref;
 use std::{
     collections::{HashMap, HashSet},
@@ -50,8 +50,11 @@ impl Library {
     ///   but do not follow symbolic links.
     /// - This will not seek directory named `ia32*`
     ///
-    pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Option<Self> {
+    pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Result<Option<Self>> {
         let root_dir = root_dir.as_ref();
+        if !root_dir.is_dir() {
+            return Ok(None);
+        }
         let mut library_dir = None;
         let mut include_dir = None;
         let mut iomp5_dir = None;
@@ -62,19 +65,18 @@ impl Library {
             }
             let (stem, ext) = match (path.file_stem(), path.extension()) {
                 (Some(stem), Some(ext)) => (
-                    stem.to_str().expect("Non UTF8 filename"),
-                    ext.to_str().expect("Non UTF8 filename"),
+                    stem.to_str().context("Non UTF8 filename")?,
+                    ext.to_str().context("Non UTF8 filename")?,
                 ),
                 _ => continue,
             };
             // Skip directory for ia32
             if path.components().any(|c| {
                 if let std::path::Component::Normal(c) = c {
-                    if c.to_str()
-                        .expect("Non-UTF8 directory name")
-                        .starts_with("ia32")
-                    {
-                        return true;
+                    if let Some(c) = c.to_str() {
+                        if c.starts_with("ia32") {
+                            return true;
+                        }
                     }
                 }
                 false
@@ -98,14 +100,14 @@ impl Library {
             match (config.link, ext) {
                 (LinkType::Static, mkl::EXTENSION_STATIC) => match name {
                     "mkl_core" => {
-                        assert!(
+                        ensure!(
                             library_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
                         )
                     }
                     "iomp5" => {
-                        assert!(
+                        ensure!(
                             iomp5_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
@@ -115,14 +117,14 @@ impl Library {
                 },
                 (LinkType::Dynamic, mkl::EXTENSION_SHARED) => match name {
                     "mkl_rt" => {
-                        assert!(
+                        ensure!(
                             library_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
                         )
                     }
                     "iomp5" => {
-                        assert!(
+                        ensure!(
                             iomp5_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
@@ -136,7 +138,7 @@ impl Library {
         if library_dir == iomp5_dir {
             iomp5_dir = None;
         }
-        match (library_dir, include_dir) {
+        Ok(match (library_dir, include_dir) {
             (Some(library_dir), Some(include_dir)) => Some(Library::Directory {
                 config,
                 include_dir,
@@ -144,7 +146,7 @@ impl Library {
                 iomp5_dir,
             }),
             _ => None,
-        }
+        })
     }
 
     /// Seek MKL in system
@@ -162,13 +164,13 @@ impl Library {
             return Ok(lib);
         }
         if let Ok(mklroot) = std::env::var("MKLROOT") {
-            if let Some(lib) = Self::seek_directory(config, mklroot) {
+            if let Some(lib) = Self::seek_directory(config, mklroot)? {
                 return Ok(lib);
             }
         }
         for path in ["/opt/intel", "C:/Program Files (x86)/IntelSWTools/"] {
             let path = Path::new(path);
-            if let Some(lib) = Self::seek_directory(config, path) {
+            if let Some(lib) = Self::seek_directory(config, path)? {
                 return Ok(lib);
             }
         }
