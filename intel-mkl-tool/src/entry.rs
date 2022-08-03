@@ -235,6 +235,37 @@ impl Library {
             _ => bail!("Invalid mkl_version.h"),
         }
     }
+
+    /// Print `cargo:rustc-link-*` metadata to stdout
+    pub fn print_cargo_metadata(&self) -> Result<()> {
+        match self {
+            Library::PkgConfig { config, .. } => {
+                pkg_config::probe_library(&config.to_string())?;
+            }
+            Library::Directory {
+                config,
+                library_dir,
+                iomp5_dir,
+                ..
+            } => {
+                println!("cargo:rustc-link-search={}", library_dir.display());
+                if let Some(iomp5_dir) = iomp5_dir {
+                    println!("cargo:rustc-link-search={}", iomp5_dir.display());
+                }
+                for lib in config.libs() {
+                    match config.link {
+                        LinkType::Static => {
+                            println!("cargo:rustc-link-lib=static={}", lib);
+                        }
+                        LinkType::Dynamic => {
+                            println!("cargo:rustc-link-lib=dylib={}", lib);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Deref)]
