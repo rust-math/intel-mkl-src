@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use intel_mkl_tool::*;
+use intel_mkl_tool::Library;
 use structopt::StructOpt;
 
 /// CLI tool for intel-mkl crate
@@ -14,19 +14,13 @@ fn main() -> Result<()> {
 
     match opt {
         Opt::Seek {} => {
-            let available = Entry::available();
+            let available = Library::available();
             if available.is_empty() {
                 bail!("No MKL found");
             }
-            for lib in Entry::available() {
-                if let Ok(version) = lib.version() {
-                    println!("{:<22}: {}.{}", lib.name(), version.0, version.1);
-                } else {
-                    println!("{:<22}", lib.name());
-                }
-                for (path, name) in &lib.found_files() {
-                    println!("  {:<25} at {}", name, path.display());
-                }
+            for lib in available {
+                let (year, minor, update) = lib.version()?;
+                println!("{:<22}: {}.{}.{}", lib.config(), year, minor, update);
             }
         }
     }
