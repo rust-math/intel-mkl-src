@@ -4,40 +4,42 @@ use std::{
     fs,
     io::{self, BufRead},
     path::{Path, PathBuf},
+    process::Command,
 };
 
-/// A library found in system
 #[derive(Debug, Clone)]
-pub enum Library {
-    PkgConfig {
-        config: Config,
-        lib: pkg_config::Library,
-    },
-    Directory {
-        config: Config,
-        /// Directory where `mkl.h` and `mkl_version.h` exists
-        include_dir: PathBuf,
-        /// Directory where `libmkl_core.a` or `libmkl_rt.so` exists
-        library_dir: PathBuf,
-        /// Directory where `libiomp5.a` or `libiomp5.so` exists
-        ///
-        /// They are sometimes placed in different position.
-        /// Returns `None` if they exist on `library_dir`.
-        iomp5_dir: Option<PathBuf>,
-    },
+pub struct Library {
+    config: Config,
+    /// Directory where `mkl.h` and `mkl_version.h` exists
+    include_dir: PathBuf,
+    /// Directory where `libmkl_core.a` or `libmkl_rt.so` exists
+    library_dir: PathBuf,
+    /// Directory where `libiomp5.a` or `libiomp5.so` exists
+    ///
+    /// They are sometimes placed in different position.
+    /// Returns `None` if they exist on `library_dir`.
+    iomp5_dir: Option<PathBuf>,
 }
 
 impl Library {
     /// Try to find MKL using pkg-config
-    pub fn pkg_config(config: Config) -> Option<Self> {
-        if let Ok(lib) = pkg_config::Config::new()
-            .cargo_metadata(false)
-            .env_metadata(false)
-            .probe(&config.to_string())
+    pub fn pkg_config(config: Config) -> Result<Option<Self>> {
+        if let Ok(out) = Command::new("pkg-config")
+            .arg("--variable=prefix")
+            .arg(config.to_string())
+            .output()
         {
-            Some(Library::PkgConfig { config, lib })
+            if out.status.success() {
+                let path = String::from_utf8(out.stdout).context("Non-UTF8 MKL prefix")?;
+                let prefix = Path::new(path.trim());
+                Self::seek_directory(config, prefix)
+            } else {
+                // pkg-config does not find MKL
+                Ok(None)
+            }
         } else {
-            None
+            // pkg-config is not found
+            Ok(None)
         }
     }
 
@@ -136,7 +138,7 @@ impl Library {
             iomp5_dir = None;
         }
         Ok(match (library_dir, include_dir) {
-            (Some(library_dir), Some(include_dir)) => Some(Library::Directory {
+            (Some(library_dir), Some(include_dir)) => Some(Library {
                 config,
                 include_dir,
                 library_dir,
@@ -157,7 +159,7 @@ impl Library {
     ///   - `C:/Program Files (x86)/IntelSWTools/` for Windows
     ///
     pub fn new(config: Config) -> Result<Self> {
-        if let Some(lib) = Self::pkg_config(config) {
+        if let Some(lib) = Self::pkg_config(config)? {
             return Ok(lib);
         }
         if let Ok(mklroot) = std::env::var("MKLROOT") {
@@ -182,10 +184,7 @@ impl Library {
     }
 
     pub fn config(&self) -> &Config {
-        match self {
-            Library::PkgConfig { config, .. } => config,
-            Library::Directory { config, .. } => config,
-        }
+        &self.config
     }
 
     /// Found MKL version parsed from `mkl_version.h`
@@ -201,19 +200,7 @@ impl Library {
     /// and this corresponds to `(2020, 0, 1)`
     ///
     pub fn version(&self) -> Result<(u32, u32, u32)> {
-        let version_h = match self {
-            Library::PkgConfig { lib, .. } => {
-                let mut version_h = None;
-                for path in &lib.include_paths {
-                    let candidate = path.join("mkl_version.h");
-                    if candidate.exists() {
-                        version_h = Some(candidate);
-                    }
-                }
-                version_h.context("mkl_version.h not found in pkg-config")?
-            }
-            Library::Directory { include_dir, .. } => include_dir.join("mkl_version.h"),
-        };
+        let version_h = self.include_dir.join("mkl_version.h");
 
         let f = fs::File::open(version_h).context("Failed to open mkl_version.h")?;
         let f = io::BufReader::new(f);
@@ -242,29 +229,17 @@ impl Library {
 
     /// Print `cargo:rustc-link-*` metadata to stdout
     pub fn print_cargo_metadata(&self) -> Result<()> {
-        match self {
-            Library::PkgConfig { config, .. } => {
-                pkg_config::probe_library(&config.to_string())?;
-            }
-            Library::Directory {
-                config,
-                library_dir,
-                iomp5_dir,
-                ..
-            } => {
-                println!("cargo:rustc-link-search={}", library_dir.display());
-                if let Some(iomp5_dir) = iomp5_dir {
-                    println!("cargo:rustc-link-search={}", iomp5_dir.display());
+        println!("cargo:rustc-link-search={}", self.library_dir.display());
+        if let Some(iomp5_dir) = &self.iomp5_dir {
+            println!("cargo:rustc-link-search={}", iomp5_dir.display());
+        }
+        for lib in self.config.libs() {
+            match self.config.link {
+                LinkType::Static => {
+                    println!("cargo:rustc-link-lib=static={}", lib);
                 }
-                for lib in config.libs() {
-                    match config.link {
-                        LinkType::Static => {
-                            println!("cargo:rustc-link-lib=static={}", lib);
-                        }
-                        LinkType::Dynamic => {
-                            println!("cargo:rustc-link-lib=dylib={}", lib);
-                        }
-                    }
+                LinkType::Dynamic => {
+                    println!("cargo:rustc-link-lib=dylib={}", lib);
                 }
             }
         }
@@ -290,7 +265,7 @@ mod tests {
     #[test]
     fn pkg_config() {
         for cfg in Config::possibles() {
-            let lib = Library::pkg_config(cfg).unwrap();
+            let lib = Library::pkg_config(cfg).unwrap().unwrap();
             dbg!(lib.version().unwrap());
         }
     }
