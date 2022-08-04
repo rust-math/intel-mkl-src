@@ -37,16 +37,13 @@ jobs:
           --manifest-path=intel-mkl-tool/Cargo.toml
           --no-default-features
 
-  seek:
+  test_pkg_config:
     strategy:
       fail-fast: false
       matrix:
         image:
           - mkl-rust
           - mkl-ubuntu
-        test:
-          - seek_opt_intel
-          - pkg_config
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/rust-math/intel-mkl-src/${{ matrix.image }}:1.56.0-1
@@ -58,7 +55,7 @@ jobs:
         command: test
         args: >
           --manifest-path=intel-mkl-tool/Cargo.toml
-          ${{ matrix.test }}
+          pkg_config
           --
           --ignored
           --show-output
