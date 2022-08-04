@@ -16,8 +16,8 @@ pub struct Library {
     library_dir: PathBuf,
     /// Directory where `libiomp5.a` or `libiomp5.so` exists
     ///
-    /// They are sometimes placed in different position.
-    /// Returns `None` if they exist on `library_dir`.
+    /// They are not required for `mkl-*-*-seq` cases,
+    /// and then this is `None`.
     iomp5_dir: Option<PathBuf>,
 }
 
@@ -156,9 +156,6 @@ impl Library {
         if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
             return Ok(None);
         }
-        if library_dir == iomp5_dir {
-            iomp5_dir = None;
-        }
         Ok(match (library_dir, include_dir) {
             (Some(library_dir), Some(include_dir)) => Some(Library {
                 config,
@@ -253,7 +250,9 @@ impl Library {
     pub fn print_cargo_metadata(&self) -> Result<()> {
         println!("cargo:rustc-link-search={}", self.library_dir.display());
         if let Some(iomp5_dir) = &self.iomp5_dir {
-            println!("cargo:rustc-link-search={}", iomp5_dir.display());
+            if iomp5_dir != &self.library_dir {
+                println!("cargo:rustc-link-search={}", iomp5_dir.display());
+            }
         }
         for lib in self.config.libs() {
             match self.config.link {
