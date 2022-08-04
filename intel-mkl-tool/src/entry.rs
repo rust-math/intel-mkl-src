@@ -244,18 +244,16 @@ impl Library {
         let mut year = None;
         let mut minor = None;
         let mut update = None;
-        for line in f.lines() {
-            if let Ok(line) = line {
-                if !line.starts_with("#define") {
-                    continue;
-                }
-                let ss: Vec<&str> = line.split(' ').collect();
-                match ss[1] {
-                    "__INTEL_MKL__" => year = Some(ss[2].parse()?),
-                    "__INTEL_MKL_MINOR__" => minor = Some(ss[2].parse()?),
-                    "__INTEL_MKL_UPDATE__" => update = Some(ss[2].parse()?),
-                    _ => continue,
-                }
+        for line in f.lines().flatten() {
+            if !line.starts_with("#define") {
+                continue;
+            }
+            let ss: Vec<&str> = line.split(' ').collect();
+            match ss[1] {
+                "__INTEL_MKL__" => year = Some(ss[2].parse()?),
+                "__INTEL_MKL_MINOR__" => minor = Some(ss[2].parse()?),
+                "__INTEL_MKL_UPDATE__" => update = Some(ss[2].parse()?),
+                _ => continue,
             }
         }
         match (year, minor, update) {
