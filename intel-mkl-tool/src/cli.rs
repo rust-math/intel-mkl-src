@@ -20,7 +20,7 @@ fn main() -> Result<()> {
             }
             for lib in available {
                 let (year, minor, update) = lib.version()?;
-                println!("{:<22}: {}.{}.{}", lib.config(), year, minor, update);
+                println!("{:<22}: {}.{}.{}", lib.config, year, minor, update);
             }
         }
     }

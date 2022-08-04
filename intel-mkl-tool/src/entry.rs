@@ -7,18 +7,29 @@ use std::{
     process::Command,
 };
 
+/// Found MKL library
+///
+/// ```no_run
+/// use std::str::FromStr;
+/// use intel_mkl_tool::{Config, Library};
+///
+/// let cfg = Config::from_str("mkl-static-lp64-iomp").unwrap();
+/// if let Ok(lib) = Library::new(cfg) {
+///     lib.print_cargo_metadata().unwrap();
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct Library {
-    config: Config,
+    pub config: Config,
     /// Directory where `mkl.h` and `mkl_version.h` exists
-    include_dir: PathBuf,
+    pub include_dir: PathBuf,
     /// Directory where `libmkl_core.a` or `libmkl_core.so` exists
-    library_dir: PathBuf,
+    pub library_dir: PathBuf,
     /// Directory where `libiomp5.a` or `libiomp5.so` exists
     ///
     /// They are not required for `mkl-*-*-seq` cases,
     /// and then this is `None`.
-    iomp5_dir: Option<PathBuf>,
+    pub iomp5_dir: Option<PathBuf>,
 }
 
 impl Library {
@@ -200,10 +211,6 @@ impl Library {
             .into_iter()
             .flat_map(|cfg| Self::new(cfg).ok())
             .collect()
-    }
-
-    pub fn config(&self) -> &Config {
-        &self.config
     }
 
     /// Found MKL version parsed from `mkl_version.h`
