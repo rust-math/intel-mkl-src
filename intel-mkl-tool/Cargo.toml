@@ -12,9 +12,6 @@ license     = "MIT"
 
 [dependencies]
 anyhow = "1.0.58"
-derive_more = "0.99.17"
-dirs = "4.0.0"
-glob = "0.3.0"
 walkdir = "2.3.2"
 
 [dev-dependencies]
