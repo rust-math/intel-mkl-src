@@ -22,7 +22,24 @@ pub struct Library {
 }
 
 impl Library {
-    /// Try to find MKL using pkg-config
+    /// Find MKL using `pkg-config`
+    ///
+    /// This only use the installed prefix obtained by `pkg-config --variable=prefix`
+    ///
+    /// ```text
+    /// $ pkg-config --variable=prefix mkl-static-lp64-seq
+    /// /opt/intel/mkl
+    /// ```
+    ///
+    /// Then pass it to [Self::seek_directory].
+    ///
+    /// Limitation
+    /// -----------
+    /// This will not work for `mkl-*-*-iomp` configure since `libiomp5.{a,so}`
+    /// will not be found under the prefix directory of MKL.
+    /// Please use `$MKLROOT` environment variable for this case,
+    /// see [Self::new] for detail.
+    ///
     pub fn pkg_config(config: Config) -> Result<Option<Self>> {
         if let Ok(out) = Command::new("pkg-config")
             .arg("--variable=prefix")
@@ -48,6 +65,8 @@ impl Library {
     /// - This will seek the directory recursively until finding MKL libraries,
     ///   but do not follow symbolic links.
     /// - This will not seek directory named `ia32*`
+    /// - Retuns `Ok(None)` if `libiomp5.{a,so}` is not found with `mkl-*-*-iomp` configure
+    ///   even if MKL binaries are found.
     ///
     pub fn seek_directory(config: Config, root_dir: impl AsRef<Path>) -> Result<Option<Self>> {
         let root_dir = root_dir.as_ref();
@@ -268,6 +287,10 @@ mod tests {
     #[test]
     fn pkg_config() {
         for cfg in Config::possibles() {
+            // pkg-config will not work for `mkl-*-*-iomp` cases
+            if cfg.parallel == Threading::OpenMP {
+                continue;
+            }
             let lib = Library::pkg_config(cfg).unwrap().unwrap();
             dbg!(lib.version().unwrap());
         }
