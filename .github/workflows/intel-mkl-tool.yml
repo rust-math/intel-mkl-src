@@ -12,8 +12,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - windows-2019
-          - macos-10.15
+          - windows-2022
+          - macos-11
           - ubuntu-22.04
     runs-on: ${{ matrix.os }}
     steps:
@@ -37,23 +37,25 @@ jobs:
           --manifest-path=intel-mkl-tool/Cargo.toml
           --no-default-features
 
-  seek:
+  test_pkg_config:
     strategy:
       fail-fast: false
       matrix:
         image:
           - mkl-rust
           - mkl-ubuntu
-          - mkl-centos
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/rust-math/intel-mkl-src/${{ matrix.image }}:1.56.0
+      image: ghcr.io/rust-math/intel-mkl-src/${{ matrix.image }}:1.56.0-1
     steps:
     - uses: actions/checkout@v1
-    - name: cargo run -- seek
-      uses: actions-rs/cargo@v1
+    - uses: actions-rs/cargo@v1
+      name: Seek /opt/intel
       with:
-        command: run
+        command: test
         args: >
           --manifest-path=intel-mkl-tool/Cargo.toml
-          -- seek
+          pkg_config
+          --
+          --ignored
+          --show-output

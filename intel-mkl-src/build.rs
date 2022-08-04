@@ -24,7 +24,7 @@
 
 use anyhow::{bail, Result};
 use intel_mkl_tool::*;
-use std::{env, path::PathBuf, str::FromStr};
+use std::str::FromStr;
 
 #[cfg(feature = "mkl-static-lp64-iomp")]
 const MKL_CONFIG: &str = "mkl-static-lp64-iomp";
@@ -45,26 +45,9 @@ const MKL_CONFIG: &str = "mkl-dynamic-ilp64-seq";
 
 fn main() -> Result<()> {
     let cfg = Config::from_str(MKL_CONFIG).unwrap();
-
-    // already exists on system
-    if let Ok(entry) = Entry::from_config(cfg) {
-        entry.print_cargo_metadata();
+    if let Ok(lib) = Library::new(cfg) {
+        lib.print_cargo_metadata()?;
         return Ok(());
     }
-
-    // download if not found
-    #[cfg(feature = "download")]
-    {
-        let path = PathBuf::from(env::var("OUT_DIR").unwrap());
-        println!(
-            r#"cargo:warning="Download Intel MKL archive into {}""#,
-            path.display()
-        );
-        cfg.download(path)?;
-        let entry = Entry::from_config(cfg).unwrap(); // must found
-        entry.print_cargo_metadata();
-        return Ok(());
-    }
-
-    bail!("No MKL found, and download flag is off.");
+    bail!("No MKL found");
 }
