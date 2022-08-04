@@ -1,16 +1,17 @@
 TOP  := $(shell git rev-parse --show-toplevel)
 HERE := $(TOP)/docker
 
-REGISTRY     := ghcr.io/rust-math/intel-mkl-src
+REGISTRY := ghcr.io/rust-math/intel-mkl-src
 RUST_VERSION := 1.56.0
+PATCH_VERSION := 1
 
 all: build
 
 build:
 	docker build $(HERE)                         \
 		--build-arg "RUST_VERSION=$(RUST_VERSION)" \
-		-t $(REGISTRY)/$(TARGET):$(RUST_VERSION) \
+		-t $(REGISTRY)/$(TARGET):$(RUST_VERSION)-$(PATCH_VERSION) \
 		-f $(TARGET).Dockerfile
 
 push: build
-	docker push $(REGISTRY)/$(TARGET):$(RUST_VERSION)
+	docker push $(REGISTRY)/$(TARGET):$(RUST_VERSION)-$(PATCH_VERSION)
