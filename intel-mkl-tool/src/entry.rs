@@ -88,7 +88,11 @@ impl Library {
         let mut include_dir = None;
         let mut iomp5_dir = None;
         for entry in walkdir::WalkDir::new(root_dir) {
-            let path = entry.unwrap().into_path();
+            let entry = entry.unwrap();
+            if entry.path_is_symlink() {
+                continue;
+            }
+            let path = entry.into_path();
             if path.is_dir() {
                 continue;
             }
