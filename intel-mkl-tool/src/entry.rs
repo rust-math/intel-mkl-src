@@ -1,10 +1,17 @@
-use crate::{mkl, Config, LinkType, Threading};
+use crate::{Config, LinkType, Threading};
 use anyhow::{bail, ensure, Context, Result};
 use std::{
     fs,
     io::{self, BufRead},
     path::{Path, PathBuf},
     process::Command,
+};
+
+/// Lacked definition of [std::env::consts]
+pub const STATIC_EXTENSION: &str = if cfg!(any(target_os = "linux", target_os = "macos")) {
+    "a"
+} else {
+    "lib"
 };
 
 /// Found MKL library
@@ -125,13 +132,13 @@ impl Library {
                 include_dir = Some(dir);
                 continue;
             }
-            let name = if let Some(name) = stem.strip_prefix(mkl::PREFIX) {
+            let name = if let Some(name) = stem.strip_prefix(std::env::consts::DLL_PREFIX) {
                 name
             } else {
                 continue;
             };
             match (config.link, ext) {
-                (LinkType::Static, mkl::EXTENSION_STATIC) => match name {
+                (LinkType::Static, STATIC_EXTENSION) => match name {
                     "mkl_core" => {
                         ensure!(
                             library_dir.replace(dir).is_none(),
@@ -148,7 +155,7 @@ impl Library {
                     }
                     _ => {}
                 },
-                (LinkType::Dynamic, mkl::EXTENSION_SHARED) => match name {
+                (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => match name {
                     "mkl_core" => {
                         ensure!(
                             library_dir.replace(dir).is_none(),
