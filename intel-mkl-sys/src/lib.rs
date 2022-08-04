@@ -48,7 +48,12 @@ mod tests {
             vdCos(n as i32, a.as_ptr(), b.as_mut_ptr());
         }
         for i in 0..n {
-            ulps_eq!(b[i], a[i].cos(), max_ulps = 4, epsilon = std::f64::EPSILON);
+            assert!(ulps_eq!(
+                b[i],
+                a[i].cos(),
+                max_ulps = 4,
+                epsilon = std::f64::EPSILON
+            ));
         }
     }
 
