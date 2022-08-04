@@ -1,4 +1,4 @@
-use crate::{mkl, Config, LinkType};
+use crate::{mkl, Config, LinkType, Threading};
 use anyhow::{bail, ensure, Context, Result};
 use std::{
     fs,
@@ -133,6 +133,9 @@ impl Library {
                 },
                 _ => {}
             }
+        }
+        if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
+            return Ok(None);
         }
         if library_dir == iomp5_dir {
             iomp5_dir = None;
