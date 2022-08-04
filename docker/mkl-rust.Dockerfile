@@ -26,7 +26,9 @@ RUN ldconfig
 ENV PKG_CONFIG_PATH /opt/intel/mkl/bin/pkgconfig
 RUN sed -i "s/MKLROOT/prefix/g" ${PKG_CONFIG_PATH}/*.pc
 
-# Setup basic rust development tools
 WORKDIR /src
+RUN chmod -R a+w /src
+
+# Setup basic rust development tools
 RUN cargo install cargo-tarpaulin
 RUN rustup component add rustfmt clippy
