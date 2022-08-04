@@ -12,7 +12,7 @@ pub struct Library {
     config: Config,
     /// Directory where `mkl.h` and `mkl_version.h` exists
     include_dir: PathBuf,
-    /// Directory where `libmkl_core.a` or `libmkl_rt.so` exists
+    /// Directory where `libmkl_core.a` or `libmkl_core.so` exists
     library_dir: PathBuf,
     /// Directory where `libiomp5.a` or `libiomp5.so` exists
     ///
@@ -115,7 +115,7 @@ impl Library {
                     _ => {}
                 },
                 (LinkType::Dynamic, mkl::EXTENSION_SHARED) => match name {
-                    "mkl_rt" => {
+                    "mkl_core" => {
                         ensure!(
                             library_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
