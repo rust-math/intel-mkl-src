@@ -13,6 +13,3 @@ license     = "MIT"
 [dependencies]
 anyhow = "1.0.58"
 walkdir = "2.3.2"
-
-[dev-dependencies]
-paste = "1.0.7"
