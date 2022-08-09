@@ -1,5 +1,9 @@
 mod pack;
 
+const REGISTRY: &str = "ghcr.io/rust-math/intel-mkl-src";
+/// Used for incompatible update of container.
+const RELEASE: u32 = 0;
+
 use anyhow::Result;
 use colored::Colorize;
 use intel_mkl_tool::{Config, Library};
@@ -11,8 +15,10 @@ fn main() -> Result<()> {
     for cfg in Config::possibles() {
         let lib = Library::new(cfg)?;
         let (year, _, update) = lib.version()?;
-        let registry = "ghcr.io/rust-math/intel-mkl-src";
-        let name = ImageName::parse(&format!("{}/{}:{}.{}", registry, cfg, year, update))?;
+        let name = ImageName::parse(&format!(
+            "{}/{}:{}.{}-{}",
+            REGISTRY, cfg, year, update, RELEASE
+        ))?;
         let output = format!("{}.tar", cfg);
 
         eprintln!("{:>12} {}", "Packaging".green().bold(), name);
