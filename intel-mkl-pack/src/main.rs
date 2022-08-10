@@ -1,8 +1,6 @@
 mod pack;
 
 const REGISTRY: &str = "ghcr.io/rust-math/intel-mkl-src";
-/// Used for incompatible update of container.
-const RELEASE: u32 = 0;
 
 use anyhow::Result;
 use colored::Colorize;
@@ -12,12 +10,15 @@ use pack::pack;
 use std::time::Instant;
 
 fn main() -> Result<()> {
+    let run_id: u64 = std::env::var("GITHUB_RUN_ID")
+        .unwrap_or("0".to_string()) // fallback value for local testing
+        .parse()?;
     for cfg in Config::possibles() {
         let lib = Library::new(cfg)?;
         let (year, _, update) = lib.version()?;
         let name = ImageName::parse(&format!(
             "{}/{}:{}.{}-{}",
-            REGISTRY, cfg, year, update, RELEASE
+            REGISTRY, cfg, year, update, run_id
         ))?;
         let output = format!("{}.tar", cfg);
 
