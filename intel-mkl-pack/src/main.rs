@@ -11,7 +11,7 @@ const REGISTRY: &str = "ghcr.io/rust-math/intel-mkl-src";
 
 fn main() -> Result<()> {
     let run_id: u64 = std::env::var("GITHUB_RUN_ID")
-        .unwrap_or("0".to_string()) // fallback value for local testing
+        .unwrap_or_else(|_| "0".to_string()) // fallback value for local testing
         .parse()?;
     for cfg in Config::possibles() {
         let lib = Library::new(cfg)?;
@@ -63,7 +63,7 @@ pub fn pack(cfg: Config, name: &ImageName, output: impl AsRef<Path>) -> Result<(
     let mut builder = Builder::new(&mut f);
     builder.append_files(&libs)?;
     builder.set_platform(&Platform::default());
-    builder.set_name(&name);
+    builder.set_name(name);
     Ok(())
 }
 
