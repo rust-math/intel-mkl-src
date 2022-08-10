@@ -3,4 +3,5 @@ members = [
   "intel-mkl-src",
   "intel-mkl-sys",
   "intel-mkl-tool",
+  "intel-mkl-pack",
 ]

@@ -14,3 +14,4 @@ rusty-tags.*
 
 # Generated archives
 *.tar.zst
+*.tar
