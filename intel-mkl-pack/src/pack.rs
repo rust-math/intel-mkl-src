@@ -13,7 +13,14 @@ pub fn pack(cfg: Config, name: &ImageName, output: impl AsRef<Path>) -> Result<(
         .into_iter()
         .chain(cfg.additional_libs().into_iter())
         .map(|name| {
-            let path = lib.library_dir.join(as_library_filename(cfg.link, &name));
+            let path = if name == "iomp5" {
+                lib.iomp5_dir
+                    .as_ref()
+                    .unwrap()
+                    .join(as_library_filename(cfg.link, &name))
+            } else {
+                lib.library_dir.join(as_library_filename(cfg.link, &name))
+            };
             if !path.exists() {
                 bail!("Required library not found: {}", path.display());
             }
