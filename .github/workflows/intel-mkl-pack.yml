@@ -1,0 +1,19 @@
+name: intel-mkl-pack
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: {}
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0-1
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --manifest-path=intel-mkl-pack/Cargo.toml --release
