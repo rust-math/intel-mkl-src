@@ -10,7 +10,7 @@ jobs:
   check-format:
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0-1
+      image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
     steps:
     - uses: actions/checkout@v1
     - uses: actions-rs/cargo@v1
@@ -21,7 +21,7 @@ jobs:
   clippy:
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/rust-math/intel-mkl-src/mkl-rust:1.56.0-1
+      image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
     steps:
     - uses: actions/checkout@v1
     - uses: actions-rs/cargo@v1
