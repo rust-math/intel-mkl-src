@@ -38,15 +38,9 @@ jobs:
           --no-default-features
 
   test_pkg_config:
-    strategy:
-      fail-fast: false
-      matrix:
-        image:
-          - mkl-rust
-          - mkl-ubuntu
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/rust-math/intel-mkl-src/${{ matrix.image }}:1.56.0-1
+      image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
     steps:
     - uses: actions/checkout@v1
     - uses: actions-rs/cargo@v1
