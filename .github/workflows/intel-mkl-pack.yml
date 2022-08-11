@@ -13,7 +13,26 @@ jobs:
       image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
     steps:
       - uses: actions/checkout@v1
+
       - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: ocipkg-cli --version=0.2.3
+      - name: Add path
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Login to GitHub Container Registry
+        run: |
+          ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
+
+      - name: Create oci-archive using intel-mkl-pack
+        uses: actions-rs/cargo@v1
         with:
           command: run
           args: --manifest-path=intel-mkl-pack/Cargo.toml --release
+
+      - name: Push oci-archives
+        run: >-
+          for ar in $(find . -name "mkl-*-*-*.tar"); do
+            ocipkg push $ar;
+          done
