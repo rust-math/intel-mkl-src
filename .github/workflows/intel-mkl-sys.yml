@@ -19,10 +19,15 @@ jobs:
           - mkl-static-lp64-seq
           - mkl-static-ilp64-iomp
           - mkl-static-ilp64-seq
-          - mkl-dynamic-lp64-iomp
-          - mkl-dynamic-lp64-seq
-          - mkl-dynamic-ilp64-iomp
-          - mkl-dynamic-ilp64-seq
+        include:
+          - image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
+            feature: mkl-dynamic-lp64-iomp
+          - image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
+            feature: mkl-dynamic-lp64-seq
+          - image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
+            feature: mkl-dynamic-ilp64-iomp
+          - image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
+            feature: mkl-dynamic-ilp64-seq
     runs-on: ubuntu-22.04
     container:
       image: ${{ matrix.image }}

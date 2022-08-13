@@ -47,9 +47,16 @@ fn main() -> Result<()> {
         lib.print_cargo_metadata()?;
         return Ok(());
     }
-    ocipkg::link_package(&format!(
-        "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
-        MKL_CONFIG
-    ))?;
+    // Try ocipkg for static library.
+    //
+    // This does not work for dynamic library because the directory
+    // where ocipkg download archive is not searched by ld
+    // unless user set `LD_LIBRARY_PATH` explictly.
+    if cfg.link == LinkType::Static {
+        ocipkg::link_package(&format!(
+            "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
+            MKL_CONFIG
+        ))?;
+    }
     Ok(())
 }
