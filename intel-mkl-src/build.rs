@@ -20,9 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#![cfg_attr(feature = "download", allow(unreachable_code))]
-
-use anyhow::{bail, Result};
+use anyhow::Result;
 use intel_mkl_tool::*;
 use std::str::FromStr;
 
@@ -49,5 +47,9 @@ fn main() -> Result<()> {
         lib.print_cargo_metadata()?;
         return Ok(());
     }
-    bail!("No MKL found");
+    ocipkg::link_package(&format!(
+        "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
+        MKL_CONFIG
+    ))?;
+    Ok(())
 }
