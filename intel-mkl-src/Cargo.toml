@@ -31,4 +31,5 @@ mkl-dynamic-ilp64-seq  = []
 
 [build-dependencies]
 anyhow = "1.0.58"
+ocipkg = "0.2.3"
 intel-mkl-tool = { version = "0.4.0-alpha.0", path = "../intel-mkl-tool", default-features = false }
