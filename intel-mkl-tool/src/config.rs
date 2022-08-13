@@ -13,7 +13,7 @@ pub const VALID_CONFIGS: &[&str] = &[
 ];
 
 /// How to link MKL
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LinkType {
     Static,
     Dynamic,
@@ -49,7 +49,7 @@ impl FromStr for LinkType {
 ///
 /// Array index of some APIs in MKL are defined by `int` in C,
 /// whose size is not fixed.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataModel {
     /// `long` and pointer are 64bit, i.e. `sizeof(int) == 4`
     LP64,
@@ -84,7 +84,7 @@ impl FromStr for DataModel {
 }
 
 /// How to manage thread(s)
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Threading {
     /// Use iomp5, Intel OpenMP runtime.
     OpenMP,
@@ -121,7 +121,7 @@ impl FromStr for Threading {
 /// Configuration for Intel MKL, e.g. `mkl-static-lp64-seq`
 ///
 /// There are 2x2x2=8 combinations of [LinkType], [DataModel], and [Threading].
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Config {
     pub link: LinkType,
     pub index_size: DataModel,
@@ -131,16 +131,6 @@ pub struct Config {
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "mkl-{}-{}-{}", self.link, self.index_size, self.parallel)
-    }
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            link: LinkType::default(),
-            index_size: DataModel::default(),
-            parallel: Threading::default(),
-        }
     }
 }
 
