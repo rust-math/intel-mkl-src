@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use intel_mkl_tool::*;
 use std::str::FromStr;
 
@@ -47,6 +47,7 @@ fn main() -> Result<()> {
         lib.print_cargo_metadata()?;
         return Ok(());
     }
+
     // Try ocipkg for static library.
     //
     // This does not work for dynamic library because the directory
@@ -57,6 +58,8 @@ fn main() -> Result<()> {
             "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
             MKL_CONFIG
         ))?;
+        return Ok(());
     }
-    Ok(())
+
+    bail!("No MKL found");
 }
