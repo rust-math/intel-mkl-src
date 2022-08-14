@@ -198,7 +198,7 @@ impl Library {
     /// - Seek the directory specified by `$MKLROOT` environment variable
     /// - Seek well-known directory
     ///   - `/opt/intel` for Linux
-    ///   - `C:/Program Files (x86)/IntelSWTools/` for Windows
+    ///   - `C:/Program Files (x86)/IntelSWTools/` and `C:/Program Files (x86)/Intel/oneAPI/` for Windows
     ///
     pub fn new(config: Config) -> Result<Self> {
         if let Some(lib) = Self::pkg_config(config)? {
@@ -209,7 +209,11 @@ impl Library {
                 return Ok(lib);
             }
         }
-        for path in ["/opt/intel", "C:/Program Files (x86)/IntelSWTools/"] {
+        for path in [
+            "/opt/intel",
+            "C:/Program Files (x86)/IntelSWTools/",
+            "C:/Program Files (x86)/Intel/oneAPI/",
+        ] {
             let path = Path::new(path);
             if let Some(lib) = Self::seek_directory(config, path)? {
                 return Ok(lib);
@@ -249,7 +253,7 @@ impl Library {
             if !line.starts_with("#define") {
                 continue;
             }
-            let ss: Vec<&str> = line.split(' ').collect();
+            let ss: Vec<&str> = line.split_whitespace().collect();
             match ss[1] {
                 "__INTEL_MKL__" => year = Some(ss[2].parse()?),
                 "__INTEL_MKL_MINOR__" => minor = Some(ss[2].parse()?),
