@@ -44,3 +44,31 @@ jobs:
           --manifest-path=intel-mkl-tool/Cargo.toml
           --release
           --example seek
+
+  seek-ubuntu:
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:22.04
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install MKL using apt
+      run: |
+        export DEBIAN_FRONTEND=noninteractive
+        apt update
+        apt install -y intel-mkl curl gcc
+
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: 1.61.0
+        profile: minimal
+        default: true
+        override: true
+    - name: Run seek example
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: >
+          --manifest-path=intel-mkl-tool/Cargo.toml
+          --release
+          --example seek
