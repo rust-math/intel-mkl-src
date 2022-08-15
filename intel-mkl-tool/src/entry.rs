@@ -94,8 +94,7 @@ impl Library {
         let mut library_dir = None;
         let mut include_dir = None;
         let mut iomp5_dir = None;
-        for entry in walkdir::WalkDir::new(root_dir) {
-            let entry = entry.unwrap();
+        for entry in walkdir::WalkDir::new(root_dir).into_iter().flatten() {
             if entry.path_is_symlink() {
                 continue;
             }
