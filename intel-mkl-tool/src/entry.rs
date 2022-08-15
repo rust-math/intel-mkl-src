@@ -1,10 +1,82 @@
-use crate::{Config, LinkType, Threading};
+use crate::{Config, DataModel, LinkType, Threading};
 use anyhow::{bail, Context, Result};
 use std::{
     fs,
     io::{self, BufRead},
     path::{Path, PathBuf},
     process::Command,
+};
+
+/// MKL Libraries to be linked explicitly,
+/// not include OpenMP runtime (iomp5)
+pub fn mkl_libs(cfg: Config) -> Vec<String> {
+    let mut libs = Vec::new();
+    match cfg.index_size {
+        DataModel::LP64 => {
+            libs.push("mkl_intel_lp64".into());
+        }
+        DataModel::ILP64 => {
+            libs.push("mkl_intel_ilp64".into());
+        }
+    };
+    match cfg.parallel {
+        Threading::OpenMP => {
+            libs.push("mkl_intel_thread".into());
+        }
+        Threading::Sequential => {
+            libs.push("mkl_sequential".into());
+        }
+    };
+    libs.push("mkl_core".into());
+    libs
+}
+
+/// MKL Libraries to be loaded dynamically
+pub fn mkl_dyn_libs(cfg: Config) -> Vec<String> {
+    match cfg.link {
+        LinkType::Static => Vec::new(),
+        LinkType::Dynamic => {
+            let mut libs = Vec::new();
+            for prefix in &["mkl", "mkl_vml"] {
+                for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
+                    libs.push(format!("{}_{}", prefix, suffix));
+                }
+            }
+            libs.push("mkl_rt".into());
+            libs.push("mkl_vml_mc2".into());
+            libs.push("mkl_vml_cmpt".into());
+            libs
+        }
+    }
+}
+
+/// Filename convention for MKL libraries.
+pub fn as_filename(link: LinkType, name: &str) -> String {
+    if cfg!(target_os = "windows") {
+        match link {
+            LinkType::Static => {
+                format!("{}.lib", name)
+            }
+            LinkType::Dynamic => {
+                format!("{}_dll.lib", name)
+            }
+        }
+    } else {
+        match link {
+            LinkType::Static => {
+                format!("lib{}.a", name)
+            }
+            LinkType::Dynamic => {
+                format!("lib{}.{}", name, std::env::consts::DLL_PREFIX)
+            }
+        }
+    }
+}
+
+pub const OPENMP_RUNTIME_LIB: &str = if cfg!(target_os = "windows") {
+    "iomp5md"
+} else {
+    "iomp5"
 };
 
 /// Lacked definition of [std::env::consts]
@@ -277,7 +349,9 @@ impl Library {
                 println!("cargo:rustc-link-search={}", iomp5_dir.display());
             }
         }
-        for lib in self.config.libs() {
+        let mut libs = mkl_libs(self.config);
+        libs.push(OPENMP_RUNTIME_LIB.to_string());
+        for lib in libs {
             match self.config.link {
                 LinkType::Static => {
                     println!("cargo:rustc-link-lib=static={}", lib);

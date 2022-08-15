@@ -159,59 +159,6 @@ impl Config {
             .map(|name| Self::from_str(name).unwrap())
             .collect()
     }
-
-    /// Common components
-    ///
-    /// The order must be following (or equivalent libs)
-    ///
-    /// mkl_intel_lp64 > mkl_intel_thread > mkl_core > iomp5
-    ///
-    pub fn libs(&self) -> Vec<String> {
-        let mut libs = Vec::new();
-        match self.index_size {
-            DataModel::LP64 => {
-                libs.push("mkl_intel_lp64".into());
-            }
-            DataModel::ILP64 => {
-                libs.push("mkl_intel_ilp64".into());
-            }
-        };
-        match self.parallel {
-            Threading::OpenMP => {
-                libs.push("mkl_intel_thread".into());
-            }
-            Threading::Sequential => {
-                libs.push("mkl_sequential".into());
-            }
-        };
-        libs.push("mkl_core".into());
-        if matches!(self.parallel, Threading::OpenMP) {
-            libs.push("iomp5".into());
-        }
-        libs
-    }
-
-    /// Dynamically loaded libraries, e.g. `libmkl_vml_avx2.so`
-    ///
-    /// - MKL seeks additional shared library **on runtime**.
-    ///   This function lists these files for packaging.
-    pub fn additional_libs(&self) -> Vec<String> {
-        match self.link {
-            LinkType::Static => Vec::new(),
-            LinkType::Dynamic => {
-                let mut libs = Vec::new();
-                for prefix in &["mkl", "mkl_vml"] {
-                    for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
-                        libs.push(format!("{}_{}", prefix, suffix));
-                    }
-                }
-                libs.push("mkl_rt".into());
-                libs.push("mkl_vml_mc2".into());
-                libs.push("mkl_vml_cmpt".into());
-                libs
-            }
-        }
-    }
 }
 
 #[cfg(test)]
