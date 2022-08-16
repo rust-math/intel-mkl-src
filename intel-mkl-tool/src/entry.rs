@@ -67,13 +67,15 @@ impl Library {
             if out.status.success() {
                 let path = String::from_utf8(out.stdout).context("Non-UTF8 MKL prefix")?;
                 let prefix = Path::new(path.trim());
+                let prefix = fs::canonicalize(prefix)?;
+                log::info!("pkg-config found {} on {}", config, prefix.display());
                 Self::seek_directory(config, prefix)
             } else {
-                // pkg-config does not find MKL
+                log::info!("pkg-config does not find {}", config);
                 Ok(None)
             }
         } else {
-            // pkg-config is not found
+            log::info!("pkg-config itself is not found");
             Ok(None)
         }
     }
@@ -139,23 +141,26 @@ impl Library {
             match (config.link, ext) {
                 (LinkType::Static, STATIC_EXTENSION) => match name {
                     "mkl_core" => {
+                        log::info!("Found: {}", path.display());
                         ensure!(
                             library_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
-                        )
+                        );
                     }
                     "iomp5" => {
+                        log::info!("Found: {}", path.display());
                         ensure!(
                             iomp5_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
-                        )
+                        );
                     }
                     _ => {}
                 },
                 (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => match name {
                     "mkl_core" => {
+                        log::info!("Found: {}", path.display());
                         ensure!(
                             library_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
@@ -163,11 +168,12 @@ impl Library {
                         )
                     }
                     "iomp5" => {
+                        log::info!("Found: {}", path.display());
                         ensure!(
                             iomp5_dir.replace(dir).is_none(),
                             "Two or more MKL found in {}",
                             root_dir.display()
-                        )
+                        );
                     }
                     _ => {}
                 },
@@ -175,6 +181,9 @@ impl Library {
             }
         }
         if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
+            if let Some(ref lib) = library_dir {
+                log::warn!("iomp5 not found while MKL found at {}", lib.display());
+            }
             return Ok(None);
         }
         Ok(match (library_dir, include_dir) {
