@@ -7,7 +7,7 @@ on:
   pull_request: {}
 
 jobs:
-  test:
+  cargo-test:
     strategy:
       fail-fast: false
       matrix:
@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: "1.56.0"
+        toolchain: 1.61.0
         profile: minimal
         default: true
         override: true
@@ -29,27 +29,18 @@ jobs:
       with:
         command: test
         args: --manifest-path=intel-mkl-tool/Cargo.toml
-    - name: cargo test with no-default-features
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: >
-          --manifest-path=intel-mkl-tool/Cargo.toml
-          --no-default-features
 
-  test_pkg_config:
+  seek:
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
     steps:
     - uses: actions/checkout@v1
-    - uses: actions-rs/cargo@v1
-      name: Seek /opt/intel
+    - name: Run seek example
+      uses: actions-rs/cargo@v1
       with:
-        command: test
+        command: run
         args: >
           --manifest-path=intel-mkl-tool/Cargo.toml
-          pkg_config
-          --
-          --ignored
-          --show-output
+          --release
+          --example seek

@@ -282,31 +282,3 @@ impl Library {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Seek /opt/intel in Linux system
-    #[ignore]
-    #[test]
-    fn seek_opt_intel() {
-        for cfg in Config::possibles() {
-            let lib = Library::seek_directory(cfg, "/opt/intel").unwrap().unwrap();
-            dbg!(lib.version().unwrap());
-        }
-    }
-
-    #[ignore]
-    #[test]
-    fn pkg_config() {
-        for cfg in Config::possibles() {
-            // pkg-config will not work for `mkl-*-*-iomp` cases
-            if cfg.parallel == Threading::OpenMP {
-                continue;
-            }
-            let lib = Library::pkg_config(cfg).unwrap().unwrap();
-            dbg!(lib.version().unwrap());
-        }
-    }
-}
