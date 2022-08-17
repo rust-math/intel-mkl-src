@@ -52,6 +52,7 @@ jobs:
       matrix:
         image:
           - ubuntu:22.04
+          - ubuntu:20.04
           - debian:10
     container:
       image: ${{ matrix.image }}
