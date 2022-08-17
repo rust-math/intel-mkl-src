@@ -1,5 +1,5 @@
 use crate::{Config, LinkType, Threading};
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{bail, Context, Result};
 use std::{
     fs,
     io::{self, BufRead},
@@ -145,29 +145,31 @@ impl Library {
             } else {
                 continue;
             };
-            match (config.link, ext) {
-                (LinkType::Static, STATIC_EXTENSION) => match name {
-                    "mkl_core" => {
-                        log::info!("Found: {}", path.display());
-                        library_dir = Some(dir);
+
+            match name {
+                "mkl_core" => {
+                    match (config.link, ext) {
+                        (LinkType::Static, STATIC_EXTENSION)
+                        | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
+                        _ => continue,
                     }
-                    "iomp5" => {
-                        log::info!("Found: {}", path.display());
-                        iomp5_dir = Some(dir);
+                    log::info!("Found: {}", path.display());
+                    library_dir = Some(dir);
+                }
+                "iomp5" => {
+                    // Allow both dynamic/static library by default
+                    //
+                    // This is due to some distribution does not provide libiomp5.a
+                    if cfg!(feature = "openmp-strict-link-type") {
+                        match (config.link, ext) {
+                            (LinkType::Static, STATIC_EXTENSION)
+                            | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
+                            _ => continue,
+                        }
                     }
-                    _ => {}
-                },
-                (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => match name {
-                    "mkl_core" => {
-                        log::info!("Found: {}", path.display());
-                        library_dir = Some(dir);
-                    }
-                    "iomp5" => {
-                        log::info!("Found: {}", path.display());
-                        iomp5_dir = Some(dir);
-                    }
-                    _ => {}
-                },
+                    log::info!("Found: {}", path.display());
+                    iomp5_dir = Some(dir);
+                }
                 _ => {}
             }
         }
