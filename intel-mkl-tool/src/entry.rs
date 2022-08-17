@@ -1,5 +1,5 @@
 use crate::{Config, LinkType, Threading};
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{bail, Context, Result};
 use std::{
     fs,
     io::{self, BufRead},
@@ -67,13 +67,15 @@ impl Library {
             if out.status.success() {
                 let path = String::from_utf8(out.stdout).context("Non-UTF8 MKL prefix")?;
                 let prefix = Path::new(path.trim());
+                let prefix = fs::canonicalize(prefix)?;
+                log::info!("pkg-config found {} on {}", config, prefix.display());
                 Self::seek_directory(config, prefix)
             } else {
-                // pkg-config does not find MKL
+                log::info!("pkg-config does not find {}", config);
                 Ok(None)
             }
         } else {
-            // pkg-config is not found
+            log::info!("pkg-config itself is not found");
             Ok(None)
         }
     }
@@ -94,14 +96,36 @@ impl Library {
         let mut library_dir = None;
         let mut include_dir = None;
         let mut iomp5_dir = None;
-        for entry in walkdir::WalkDir::new(root_dir).into_iter().flatten() {
-            if entry.path_is_symlink() {
-                continue;
-            }
-            let path = entry.into_path();
-            if path.is_dir() {
-                continue;
-            }
+        for path in walkdir::WalkDir::new(root_dir)
+            .into_iter()
+            .flatten() // skip unreadable directories
+            .flat_map(|entry| {
+                let path = entry.into_path();
+                // Skip directory
+                if path.is_dir() {
+                    return None;
+                }
+                // Skip files under directory for ia32
+                if path.components().any(|c| {
+                    if let std::path::Component::Normal(c) = c {
+                        if let Some(c) = c.to_str() {
+                            if c.starts_with("ia32") {
+                                return true;
+                            }
+                        }
+                    }
+                    false
+                }) {
+                    return None;
+                }
+                Some(path)
+            })
+        {
+            let dir = path
+                .parent()
+                .expect("parent must exist here since this is under `root_dir`")
+                .to_owned();
+
             let (stem, ext) = match (path.file_stem(), path.extension()) {
                 (Some(stem), Some(ext)) => (
                     stem.to_str().context("Non UTF8 filename")?,
@@ -109,72 +133,50 @@ impl Library {
                 ),
                 _ => continue,
             };
-            // Skip directory for ia32
-            if path.components().any(|c| {
-                if let std::path::Component::Normal(c) = c {
-                    if let Some(c) = c.to_str() {
-                        if c.starts_with("ia32") {
-                            return true;
-                        }
-                    }
-                }
-                false
-            }) {
-                continue;
-            }
 
-            let dir = path
-                .parent()
-                .expect("parent must exist here since this is under `root_dir`")
-                .to_owned();
             if stem == "mkl" && ext == "h" {
+                log::info!("Found mkl.h: {}", path.display());
                 include_dir = Some(dir);
                 continue;
             }
+
             let name = if let Some(name) = stem.strip_prefix(std::env::consts::DLL_PREFIX) {
                 name
             } else {
                 continue;
             };
-            match (config.link, ext) {
-                (LinkType::Static, STATIC_EXTENSION) => match name {
-                    "mkl_core" => {
-                        ensure!(
-                            library_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        )
+
+            match name {
+                "mkl_core" => {
+                    match (config.link, ext) {
+                        (LinkType::Static, STATIC_EXTENSION)
+                        | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
+                        _ => continue,
                     }
-                    "iomp5" => {
-                        ensure!(
-                            iomp5_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        )
+                    log::info!("Found: {}", path.display());
+                    library_dir = Some(dir);
+                }
+                "iomp5" => {
+                    // Allow both dynamic/static library by default
+                    //
+                    // This is due to some distribution does not provide libiomp5.a
+                    if cfg!(feature = "openmp-strict-link-type") {
+                        match (config.link, ext) {
+                            (LinkType::Static, STATIC_EXTENSION)
+                            | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
+                            _ => continue,
+                        }
                     }
-                    _ => {}
-                },
-                (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => match name {
-                    "mkl_core" => {
-                        ensure!(
-                            library_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        )
-                    }
-                    "iomp5" => {
-                        ensure!(
-                            iomp5_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        )
-                    }
-                    _ => {}
-                },
+                    log::info!("Found: {}", path.display());
+                    iomp5_dir = Some(dir);
+                }
                 _ => {}
             }
         }
         if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
+            if let Some(ref lib) = library_dir {
+                log::warn!("iomp5 not found while MKL found at {}", lib.display());
+            }
             return Ok(None);
         }
         Ok(match (library_dir, include_dir) {

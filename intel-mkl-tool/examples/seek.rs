@@ -2,20 +2,16 @@ use intel_mkl_tool::*;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .init();
     let mut num_not_found = 0;
     for cfg in Config::possibles() {
-        let lib = Library::new(cfg);
-        print!(
-            "{:>7} {:>5} {:>4}",
-            cfg.link.to_string(),
-            cfg.index_size.to_string(),
-            cfg.parallel.to_string()
-        );
-        if let Ok(lib) = lib {
-            println!(" {}", lib.library_dir.display());
+        log::info!("Seek {}", cfg);
+        if let Ok(lib) = Library::new(cfg) {
+            log::info!("{:?}", lib);
         } else {
             num_not_found += 1;
-            println!(" Not found");
         }
     }
     return ExitCode::from(num_not_found);

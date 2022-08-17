@@ -10,6 +10,14 @@ repository  = "https://github.com/rust-math/intel-mkl-src"
 keywords    = []
 license     = "MIT"
 
+[features]
+# Do not allow linking dynamic library for mkl-static-*-iomp
+openmp-strict-link-type = []
+
 [dependencies]
 anyhow = "1.0.58"
+log = "0.4.17"
 walkdir = "2.3.2"
+
+[dev-dependencies]
+env_logger = "0.9.0"
