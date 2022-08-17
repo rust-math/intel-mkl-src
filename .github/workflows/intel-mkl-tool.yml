@@ -45,12 +45,22 @@ jobs:
           --release
           --example seek
 
-  seek-ubuntu:
+  seek-apt:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ubuntu:22.04
+          - debian:10
     container:
-      image: ubuntu:22.04
+      image: ${{ matrix.image }}
     steps:
     - uses: actions/checkout@v1
+
+    - name: Add non-free registry
+      if: ${{ startsWith(matrix.image, 'debian') }}
+      run: sed -i "s/main$/main contrib non-free/" /etc/apt/sources.list
 
     - name: Install MKL using apt
       run: |
