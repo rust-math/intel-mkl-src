@@ -83,3 +83,20 @@ jobs:
           --manifest-path=intel-mkl-tool/Cargo.toml
           --release
           --example seek
+
+  seek-windows:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get MKL using NuGet
+      run: nuget install intelmkl.devel.win-x64
+    - name: Run seek example
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args: >
+          --manifest-path=intel-mkl-tool/Cargo.toml
+          --release
+          --example seek
+      env:
+        MKLROOT: ${{ github.workspace }}
