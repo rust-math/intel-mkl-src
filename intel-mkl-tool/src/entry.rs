@@ -149,38 +149,22 @@ impl Library {
                 (LinkType::Static, STATIC_EXTENSION) => match name {
                     "mkl_core" => {
                         log::info!("Found: {}", path.display());
-                        ensure!(
-                            library_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        );
+                        library_dir = Some(dir);
                     }
                     "iomp5" => {
                         log::info!("Found: {}", path.display());
-                        ensure!(
-                            iomp5_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        );
+                        iomp5_dir = Some(dir);
                     }
                     _ => {}
                 },
                 (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => match name {
                     "mkl_core" => {
                         log::info!("Found: {}", path.display());
-                        ensure!(
-                            library_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        )
+                        library_dir = Some(dir);
                     }
                     "iomp5" => {
                         log::info!("Found: {}", path.display());
-                        ensure!(
-                            iomp5_dir.replace(dir).is_none(),
-                            "Two or more MKL found in {}",
-                            root_dir.display()
-                        );
+                        iomp5_dir = Some(dir);
                     }
                     _ => {}
                 },
