@@ -205,6 +205,7 @@ impl Library {
             return Ok(lib);
         }
         if let Ok(mklroot) = std::env::var("MKLROOT") {
+            log::info!("MKLROOT environment variable is detected: {}", mklroot);
             if let Some(lib) = Self::seek_directory(config, mklroot)? {
                 return Ok(lib);
             }
@@ -269,6 +270,7 @@ impl Library {
 
     /// Print `cargo:rustc-link-*` metadata to stdout
     pub fn print_cargo_metadata(&self) -> Result<()> {
+        println!("cargo:rerun-if-env-changed=MKLROOT");
         println!("cargo:rustc-link-search={}", self.library_dir.display());
         if let Some(iomp5_dir) = &self.iomp5_dir {
             if iomp5_dir != &self.library_dir {
