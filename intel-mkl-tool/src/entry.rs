@@ -85,10 +85,10 @@ pub fn openmp_runtime_file_name(link: LinkType) -> String {
     if cfg!(target_os = "windows") {
         match link {
             LinkType::Static => {
-                format!("{}.lib", name)
+                format!("lib{}.lib", name)
             }
             LinkType::Dynamic => {
-                format!("{}.dll", name)
+                format!("lib{}.dll", name)
             }
         }
     } else {
