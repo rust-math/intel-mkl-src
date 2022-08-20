@@ -412,27 +412,11 @@ impl Library {
         }
 
         if self.config.parallel == Threading::OpenMP {
-            match (
-                self.iomp5_static_dir.as_ref(),
-                self.iomp5_dynamic_dir.as_ref(),
-            ) {
-                (Some(static_dir), Some(dynamic_dir)) => match self.config.link {
-                    LinkType::Static => {
-                        println!("cargo:rustc-link-search={}", static_dir.display());
-                    }
-                    LinkType::Dynamic => {
-                        println!("cargo:rustc-link-search={}", dynamic_dir.display());
-                    }
-                },
-                (Some(static_dir), None) => {
-                    println!("cargo:rustc-link-search={}", static_dir.display());
-                }
-                (None, Some(dynamic_dir)) => {
-                    println!("cargo:rustc-link-search={}", dynamic_dir.display());
-                }
-                _ => {
-                    bail!("OpenMP runtime not found");
-                }
+            if let Some(ref dir) = self.iomp5_static_dir {
+                println!("cargo:rustc-link-search={}", dir.display());
+            }
+            if let Some(ref dir) = self.iomp5_dynamic_dir {
+                println!("cargo:rustc-link-search={}", dir.display());
             }
             println!("cargo:rustc-link-lib={}", OPENMP_RUNTIME_LIB);
         }
