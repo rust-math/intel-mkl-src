@@ -51,3 +51,29 @@ jobs:
             --manifest-path=intel-mkl-sys/Cargo.toml
             --no-default-features
             --features=${{ matrix.feature }}
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        feature:
+          - mkl-static-lp64-iomp
+          - mkl-static-lp64-seq
+          - mkl-static-ilp64-iomp
+          - mkl-static-ilp64-seq
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v1
+      - name: Get MKL using NuGet
+        run: |
+          nuget install intelmkl.devel.cluster.win-x64
+          nuget install intelmkl.static.cluster.win-x64
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: >
+            --manifest-path=intel-mkl-sys/Cargo.toml
+            --no-default-features
+            --features=${{ matrix.feature }}
+        env:
+          MKLROOT: ${{ github.workspace }}

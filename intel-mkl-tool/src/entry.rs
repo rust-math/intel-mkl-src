@@ -1,4 +1,4 @@
-use crate::{Config, LinkType, Threading};
+use crate::{Config, DataModel, LinkType, Threading};
 use anyhow::{bail, Context, Result};
 use std::{
     fs,
@@ -6,6 +6,111 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
+
+/// MKL Libraries to be linked explicitly,
+/// not include OpenMP runtime (iomp5)
+pub fn mkl_libs(cfg: Config) -> Vec<String> {
+    let mut libs = Vec::new();
+    match cfg.index_size {
+        DataModel::LP64 => {
+            libs.push("mkl_intel_lp64".into());
+        }
+        DataModel::ILP64 => {
+            libs.push("mkl_intel_ilp64".into());
+        }
+    };
+    match cfg.parallel {
+        Threading::OpenMP => {
+            libs.push("mkl_intel_thread".into());
+        }
+        Threading::Sequential => {
+            libs.push("mkl_sequential".into());
+        }
+    };
+    libs.push("mkl_core".into());
+
+    if cfg!(target_os = "windows") && cfg.link == LinkType::Dynamic {
+        libs.into_iter().map(|lib| format!("{}_dll", lib)).collect()
+    } else {
+        libs
+    }
+}
+
+/// MKL Libraries to be loaded dynamically
+pub fn mkl_dyn_libs(cfg: Config) -> Vec<String> {
+    match cfg.link {
+        LinkType::Static => Vec::new(),
+        LinkType::Dynamic => {
+            let mut libs = Vec::new();
+            for prefix in &["mkl", "mkl_vml"] {
+                for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
+                    libs.push(format!("{}_{}", prefix, suffix));
+                }
+            }
+            libs.push("mkl_rt".into());
+            libs.push("mkl_vml_mc2".into());
+            libs.push("mkl_vml_cmpt".into());
+
+            if cfg!(target_os = "windows") {
+                libs.into_iter().map(|lib| format!("{}_dll", lib)).collect()
+            } else {
+                libs
+            }
+        }
+    }
+}
+
+/// Filename convention for MKL libraries.
+pub fn mkl_file_name(link: LinkType, name: &str) -> String {
+    if cfg!(target_os = "windows") {
+        // On windows
+        //
+        // - Static:  mkl_core.lib
+        // - Dynamic: mkl_core_dll.lib
+        //
+        // and `_dll` suffix is added in [mkl_libs] and [mkl_dyn_libs]
+        format!("{}.lib", name)
+    } else {
+        match link {
+            LinkType::Static => {
+                format!("lib{}.a", name)
+            }
+            LinkType::Dynamic => {
+                format!("lib{}.{}", name, std::env::consts::DLL_EXTENSION)
+            }
+        }
+    }
+}
+
+pub const OPENMP_RUNTIME_LIB: &str = if cfg!(target_os = "windows") {
+    "libiomp5md"
+} else {
+    "iomp5"
+};
+
+/// Filename convention for OpenMP runtime.
+pub fn openmp_runtime_file_name(link: LinkType) -> String {
+    let name = OPENMP_RUNTIME_LIB;
+    if cfg!(target_os = "windows") {
+        match link {
+            LinkType::Static => {
+                format!("{}.lib", name)
+            }
+            LinkType::Dynamic => {
+                format!("{}.dll", name)
+            }
+        }
+    } else {
+        match link {
+            LinkType::Static => {
+                format!("lib{}.a", name)
+            }
+            LinkType::Dynamic => {
+                format!("lib{}.{}", name, std::env::consts::DLL_EXTENSION)
+            }
+        }
+    }
+}
 
 /// Lacked definition of [std::env::consts]
 pub const STATIC_EXTENSION: &str = if cfg!(any(target_os = "linux", target_os = "macos")) {
@@ -32,11 +137,18 @@ pub struct Library {
     pub include_dir: PathBuf,
     /// Directory where `libmkl_core.a` or `libmkl_core.so` exists
     pub library_dir: PathBuf,
-    /// Directory where `libiomp5.a` or `libiomp5.so` exists
+
+    /// Directory where `libiomp5.a` or corresponding file exists
     ///
-    /// They are not required for `mkl-*-*-seq` cases,
-    /// and then this is `None`.
-    pub iomp5_dir: Option<PathBuf>,
+    /// - They are not required for `mkl-*-*-seq` and `mkl-dynamic-*-iomp` cases, and then this is `None`.
+    /// - Both static and dynamic dir can be `Some` when `openmp-strict-link-type` feature is OFF.
+    pub iomp5_static_dir: Option<PathBuf>,
+
+    /// Directory where `libiomp5.so` or corresponding file exists
+    ///
+    /// - They are not required for `mkl-*-*-seq` cases and `mkl-static-*-iomp`, and then this is `None`.
+    /// - Both static and dynamic dir can be `Some` when `openmp-strict-link-type` feature is OFF.
+    pub iomp5_dynamic_dir: Option<PathBuf>,
 }
 
 impl Library {
@@ -95,8 +207,9 @@ impl Library {
         }
         let mut library_dir = None;
         let mut include_dir = None;
-        let mut iomp5_dir = None;
-        for path in walkdir::WalkDir::new(root_dir)
+        let mut iomp5_static_dir = None;
+        let mut iomp5_dynamic_dir = None;
+        for (dir, file_name) in walkdir::WalkDir::new(root_dir)
             .into_iter()
             .flatten() // skip unreadable directories
             .flat_map(|entry| {
@@ -105,11 +218,11 @@ impl Library {
                 if path.is_dir() {
                     return None;
                 }
-                // Skip files under directory for ia32
+                // Skip files for 32bit system under `ia32*/` and `win-x86`
                 if path.components().any(|c| {
                     if let std::path::Component::Normal(c) = c {
                         if let Some(c) = c.to_str() {
-                            if c.starts_with("ia32") {
+                            if c.starts_with("ia32") || c == "win-x86" {
                                 return true;
                             }
                         }
@@ -118,64 +231,78 @@ impl Library {
                 }) {
                     return None;
                 }
-                Some(path)
+
+                let dir = path
+                    .parent()
+                    .expect("parent must exist here since this is under `root_dir`")
+                    .to_owned();
+
+                if let Some(Some(file_name)) = path.file_name().map(|f| f.to_str()) {
+                    Some((dir, file_name.to_string()))
+                } else {
+                    None
+                }
             })
         {
-            let dir = path
-                .parent()
-                .expect("parent must exist here since this is under `root_dir`")
-                .to_owned();
-
-            let (stem, ext) = match (path.file_stem(), path.extension()) {
-                (Some(stem), Some(ext)) => (
-                    stem.to_str().context("Non UTF8 filename")?,
-                    ext.to_str().context("Non UTF8 filename")?,
-                ),
-                _ => continue,
-            };
-
-            if stem == "mkl" && ext == "h" {
-                log::info!("Found mkl.h: {}", path.display());
+            if include_dir.is_none() && file_name == "mkl.h" {
+                log::info!("Found mkl.h at {}", dir.display());
                 include_dir = Some(dir);
                 continue;
             }
 
-            let name = if let Some(name) = stem.strip_prefix(std::env::consts::DLL_PREFIX) {
-                name
-            } else {
-                continue;
-            };
-
-            match name {
-                "mkl_core" => {
-                    match (config.link, ext) {
-                        (LinkType::Static, STATIC_EXTENSION)
-                        | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
-                        _ => continue,
+            if library_dir.is_none() {
+                for name in mkl_libs(config) {
+                    if file_name == mkl_file_name(config.link, &name) {
+                        log::info!("Found {} at {}", file_name, dir.display());
+                        library_dir = Some(dir.clone());
+                        continue;
                     }
-                    log::info!("Found: {}", path.display());
-                    library_dir = Some(dir);
                 }
-                "iomp5" => {
-                    // Allow both dynamic/static library by default
-                    //
-                    // This is due to some distribution does not provide libiomp5.a
-                    if cfg!(feature = "openmp-strict-link-type") {
-                        match (config.link, ext) {
-                            (LinkType::Static, STATIC_EXTENSION)
-                            | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
-                            _ => continue,
+            }
+
+            // Do not seek OpenMP runtime if `Threading::Sequential`
+            if config.parallel == Threading::OpenMP {
+                // Allow both dynamic/static library by default
+                //
+                // This is due to some distribution does not provide libiomp5.a
+                let possible_link_types = if cfg!(feature = "openmp-strict-link-type") {
+                    vec![config.link]
+                } else {
+                    vec![config.link, config.link.otherwise()]
+                };
+                for link in possible_link_types {
+                    if file_name == openmp_runtime_file_name(link) {
+                        match link {
+                            LinkType::Static => {
+                                log::info!(
+                                    "Found static OpenMP runtime ({}): {}",
+                                    file_name,
+                                    dir.display()
+                                );
+                                iomp5_static_dir = Some(dir.clone())
+                            }
+                            LinkType::Dynamic => {
+                                log::info!(
+                                    "Found dynamic OpenMP runtime ({}): {}",
+                                    file_name,
+                                    dir.display()
+                                );
+                                iomp5_dynamic_dir = Some(dir.clone())
+                            }
                         }
                     }
-                    log::info!("Found: {}", path.display());
-                    iomp5_dir = Some(dir);
                 }
-                _ => {}
             }
         }
-        if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
+        if config.parallel == Threading::OpenMP
+            && iomp5_dynamic_dir.is_none()
+            && iomp5_static_dir.is_none()
+        {
             if let Some(ref lib) = library_dir {
-                log::warn!("iomp5 not found while MKL found at {}", lib.display());
+                log::warn!(
+                    "OpenMP runtime not found while MKL found at {}",
+                    lib.display()
+                );
             }
             return Ok(None);
         }
@@ -184,7 +311,8 @@ impl Library {
                 config,
                 include_dir,
                 library_dir,
-                iomp5_dir,
+                iomp5_static_dir,
+                iomp5_dynamic_dir,
             }),
             _ => None,
         })
@@ -198,18 +326,23 @@ impl Library {
     /// - Seek the directory specified by `$MKLROOT` environment variable
     /// - Seek well-known directory
     ///   - `/opt/intel` for Linux
-    ///   - `C:/Program Files (x86)/IntelSWTools/` for Windows
+    ///   - `C:/Program Files (x86)/IntelSWTools/` and `C:/Program Files (x86)/Intel/oneAPI/` for Windows
     ///
     pub fn new(config: Config) -> Result<Self> {
         if let Some(lib) = Self::pkg_config(config)? {
             return Ok(lib);
         }
         if let Ok(mklroot) = std::env::var("MKLROOT") {
+            log::info!("MKLROOT environment variable is detected: {}", mklroot);
             if let Some(lib) = Self::seek_directory(config, mklroot)? {
                 return Ok(lib);
             }
         }
-        for path in ["/opt/intel", "C:/Program Files (x86)/IntelSWTools/"] {
+        for path in [
+            "/opt/intel",
+            "C:/Program Files (x86)/IntelSWTools/",
+            "C:/Program Files (x86)/Intel/oneAPI/",
+        ] {
             let path = Path::new(path);
             if let Some(lib) = Self::seek_directory(config, path)? {
                 return Ok(lib);
@@ -249,7 +382,7 @@ impl Library {
             if !line.starts_with("#define") {
                 continue;
             }
-            let ss: Vec<&str> = line.split(' ').collect();
+            let ss: Vec<&str> = line.split_whitespace().collect();
             match ss[1] {
                 "__INTEL_MKL__" => year = Some(ss[2].parse()?),
                 "__INTEL_MKL_MINOR__" => minor = Some(ss[2].parse()?),
@@ -265,13 +398,9 @@ impl Library {
 
     /// Print `cargo:rustc-link-*` metadata to stdout
     pub fn print_cargo_metadata(&self) -> Result<()> {
+        println!("cargo:rerun-if-env-changed=MKLROOT");
         println!("cargo:rustc-link-search={}", self.library_dir.display());
-        if let Some(iomp5_dir) = &self.iomp5_dir {
-            if iomp5_dir != &self.library_dir {
-                println!("cargo:rustc-link-search={}", iomp5_dir.display());
-            }
-        }
-        for lib in self.config.libs() {
+        for lib in mkl_libs(self.config) {
             match self.config.link {
                 LinkType::Static => {
                     println!("cargo:rustc-link-lib=static={}", lib);
@@ -280,6 +409,16 @@ impl Library {
                     println!("cargo:rustc-link-lib=dylib={}", lib);
                 }
             }
+        }
+
+        if self.config.parallel == Threading::OpenMP {
+            if let Some(ref dir) = self.iomp5_static_dir {
+                println!("cargo:rustc-link-search={}", dir.display());
+            }
+            if let Some(ref dir) = self.iomp5_dynamic_dir {
+                println!("cargo:rustc-link-search={}", dir.display());
+            }
+            println!("cargo:rustc-link-lib={}", OPENMP_RUNTIME_LIB);
         }
         Ok(())
     }

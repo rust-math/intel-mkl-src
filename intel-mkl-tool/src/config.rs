@@ -1,6 +1,19 @@
 use anyhow::{bail, Result};
 use std::{fmt, str::FromStr};
 
+macro_rules! impl_otherwise {
+    ($e:ident, $a:ident, $b:ident) => {
+        impl $e {
+            pub fn otherwise(&self) -> Self {
+                match self {
+                    $e::$a => $e::$b,
+                    $e::$b => $e::$a,
+                }
+            }
+        }
+    };
+}
+
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
     "mkl-dynamic-ilp64-seq",
@@ -18,6 +31,7 @@ pub enum LinkType {
     Static,
     Dynamic,
 }
+impl_otherwise!(LinkType, Static, Dynamic);
 
 impl fmt::Display for LinkType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -56,6 +70,7 @@ pub enum DataModel {
     /// `int`, `long` and pointer are 64bit, i.e. `sizeof(int) == 8`
     ILP64,
 }
+impl_otherwise!(DataModel, LP64, ILP64);
 
 impl fmt::Display for DataModel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -91,6 +106,8 @@ pub enum Threading {
     /// No OpenMP runtime.
     Sequential,
 }
+
+impl_otherwise!(Threading, OpenMP, Sequential);
 
 impl Default for Threading {
     fn default() -> Self {
@@ -158,59 +175,6 @@ impl Config {
             .iter()
             .map(|name| Self::from_str(name).unwrap())
             .collect()
-    }
-
-    /// Common components
-    ///
-    /// The order must be following (or equivalent libs)
-    ///
-    /// mkl_intel_lp64 > mkl_intel_thread > mkl_core > iomp5
-    ///
-    pub fn libs(&self) -> Vec<String> {
-        let mut libs = Vec::new();
-        match self.index_size {
-            DataModel::LP64 => {
-                libs.push("mkl_intel_lp64".into());
-            }
-            DataModel::ILP64 => {
-                libs.push("mkl_intel_ilp64".into());
-            }
-        };
-        match self.parallel {
-            Threading::OpenMP => {
-                libs.push("mkl_intel_thread".into());
-            }
-            Threading::Sequential => {
-                libs.push("mkl_sequential".into());
-            }
-        };
-        libs.push("mkl_core".into());
-        if matches!(self.parallel, Threading::OpenMP) {
-            libs.push("iomp5".into());
-        }
-        libs
-    }
-
-    /// Dynamically loaded libraries, e.g. `libmkl_vml_avx2.so`
-    ///
-    /// - MKL seeks additional shared library **on runtime**.
-    ///   This function lists these files for packaging.
-    pub fn additional_libs(&self) -> Vec<String> {
-        match self.link {
-            LinkType::Static => Vec::new(),
-            LinkType::Dynamic => {
-                let mut libs = Vec::new();
-                for prefix in &["mkl", "mkl_vml"] {
-                    for suffix in &["def", "avx", "avx2", "avx512", "avx512_mic", "mc", "mc3"] {
-                        libs.push(format!("{}_{}", prefix, suffix));
-                    }
-                }
-                libs.push("mkl_rt".into());
-                libs.push("mkl_vml_mc2".into());
-                libs.push("mkl_vml_cmpt".into());
-                libs
-            }
-        }
     }
 }
 
