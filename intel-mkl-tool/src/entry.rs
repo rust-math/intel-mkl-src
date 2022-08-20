@@ -128,11 +128,18 @@ pub struct Library {
     pub include_dir: PathBuf,
     /// Directory where `libmkl_core.a` or `libmkl_core.so` exists
     pub library_dir: PathBuf,
-    /// Directory where `libiomp5.a` or `libiomp5.so` exists
+
+    /// Directory where `libiomp5.a` or corresponding file exists
     ///
-    /// They are not required for `mkl-*-*-seq` cases,
-    /// and then this is `None`.
-    pub iomp5_dir: Option<PathBuf>,
+    /// - They are not required for `mkl-*-*-seq` and `mkl-dynamic-*-iomp` cases, and then this is `None`.
+    /// - Both static and dynamic dir can be `Some` when `openmp-strict-link-type` feature is OFF.
+    pub iomp5_static_dir: Option<PathBuf>,
+
+    /// Directory where `libiomp5.so` or corresponding file exists
+    ///
+    /// - They are not required for `mkl-*-*-seq` cases and `mkl-static-*-iomp`, and then this is `None`.
+    /// - Both static and dynamic dir can be `Some` when `openmp-strict-link-type` feature is OFF.
+    pub iomp5_dynamic_dir: Option<PathBuf>,
 }
 
 impl Library {
@@ -191,7 +198,8 @@ impl Library {
         }
         let mut library_dir = None;
         let mut include_dir = None;
-        let mut iomp5_dir = None;
+        let mut iomp5_static_dir = None;
+        let mut iomp5_dynamic_dir = None;
         for (dir, file_name) in walkdir::WalkDir::new(root_dir)
             .into_iter()
             .flatten() // skip unreadable directories
@@ -253,15 +261,36 @@ impl Library {
             };
             for link in possible_link_types {
                 if file_name == openmp_runtime_file_name(link) {
-                    log::info!("Found OpenMP runtime ({}): {}", file_name, dir.display());
-                    iomp5_dir = Some(dir.clone());
-                    continue;
+                    match link {
+                        LinkType::Static => {
+                            log::info!(
+                                "Found static OpenMP runtime ({}): {}",
+                                file_name,
+                                dir.display()
+                            );
+                            iomp5_static_dir = Some(dir.clone())
+                        }
+                        LinkType::Dynamic => {
+                            log::info!(
+                                "Found dynamic OpenMP runtime ({}): {}",
+                                file_name,
+                                dir.display()
+                            );
+                            iomp5_dynamic_dir = Some(dir.clone())
+                        }
+                    }
                 }
             }
         }
-        if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
+        if config.parallel == Threading::OpenMP
+            && iomp5_dynamic_dir.is_none()
+            && iomp5_static_dir.is_none()
+        {
             if let Some(ref lib) = library_dir {
-                log::warn!("iomp5 not found while MKL found at {}", lib.display());
+                log::warn!(
+                    "OpenMP runtime not found while MKL found at {}",
+                    lib.display()
+                );
             }
             return Ok(None);
         }
@@ -270,7 +299,8 @@ impl Library {
                 config,
                 include_dir,
                 library_dir,
-                iomp5_dir,
+                iomp5_static_dir,
+                iomp5_dynamic_dir,
             }),
             _ => None,
         })
@@ -358,16 +388,7 @@ impl Library {
     pub fn print_cargo_metadata(&self) -> Result<()> {
         println!("cargo:rerun-if-env-changed=MKLROOT");
         println!("cargo:rustc-link-search={}", self.library_dir.display());
-        if let Some(iomp5_dir) = &self.iomp5_dir {
-            if iomp5_dir != &self.library_dir {
-                println!("cargo:rustc-link-search={}", iomp5_dir.display());
-            }
-        }
-        let mut libs = mkl_libs(self.config);
-        if self.config.parallel == Threading::OpenMP {
-            libs.push(OPENMP_RUNTIME_LIB.to_string());
-        }
-        for lib in libs {
+        for lib in mkl_libs(self.config) {
             match self.config.link {
                 LinkType::Static => {
                     println!("cargo:rustc-link-lib=static={}", lib);
@@ -377,6 +398,18 @@ impl Library {
                 }
             }
         }
+
+        if let Some(dir) = &self.iomp5_static_dir {
+            if dir != &self.library_dir {
+                println!("cargo:rustc-link-search={}", dir.display());
+            }
+        }
+        if let Some(dir) = &self.iomp5_dynamic_dir {
+            if dir != &self.library_dir {
+                println!("cargo:rustc-link-search={}", dir.display());
+            }
+        }
+        println!("cargo:rustc-link-lib={}", OPENMP_RUNTIME_LIB);
         Ok(())
     }
 }
