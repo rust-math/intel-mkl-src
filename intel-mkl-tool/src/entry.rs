@@ -74,7 +74,7 @@ pub fn mkl_file_name(link: LinkType, name: &str) -> String {
 }
 
 pub const OPENMP_RUNTIME_LIB: &str = if cfg!(target_os = "windows") {
-    "iomp5md"
+    "libiomp5md"
 } else {
     "iomp5"
 };
@@ -85,10 +85,10 @@ pub fn openmp_runtime_file_name(link: LinkType) -> String {
     if cfg!(target_os = "windows") {
         match link {
             LinkType::Static => {
-                format!("lib{}.lib", name)
+                format!("{}.lib", name)
             }
             LinkType::Dynamic => {
-                format!("lib{}.dll", name)
+                format!("{}.dll", name)
             }
         }
     } else {
