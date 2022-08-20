@@ -251,32 +251,35 @@ impl Library {
                 }
             }
 
-            // Allow both dynamic/static library by default
-            //
-            // This is due to some distribution does not provide libiomp5.a
-            let possible_link_types = if cfg!(feature = "openmp-strict-link-type") {
-                vec![config.link]
-            } else {
-                vec![config.link, config.link.otherwise()]
-            };
-            for link in possible_link_types {
-                if file_name == openmp_runtime_file_name(link) {
-                    match link {
-                        LinkType::Static => {
-                            log::info!(
-                                "Found static OpenMP runtime ({}): {}",
-                                file_name,
-                                dir.display()
-                            );
-                            iomp5_static_dir = Some(dir.clone())
-                        }
-                        LinkType::Dynamic => {
-                            log::info!(
-                                "Found dynamic OpenMP runtime ({}): {}",
-                                file_name,
-                                dir.display()
-                            );
-                            iomp5_dynamic_dir = Some(dir.clone())
+            // Do not seek OpenMP runtime if `Threading::Sequential`
+            if config.parallel == Threading::OpenMP {
+                // Allow both dynamic/static library by default
+                //
+                // This is due to some distribution does not provide libiomp5.a
+                let possible_link_types = if cfg!(feature = "openmp-strict-link-type") {
+                    vec![config.link]
+                } else {
+                    vec![config.link, config.link.otherwise()]
+                };
+                for link in possible_link_types {
+                    if file_name == openmp_runtime_file_name(link) {
+                        match link {
+                            LinkType::Static => {
+                                log::info!(
+                                    "Found static OpenMP runtime ({}): {}",
+                                    file_name,
+                                    dir.display()
+                                );
+                                iomp5_static_dir = Some(dir.clone())
+                            }
+                            LinkType::Dynamic => {
+                                log::info!(
+                                    "Found dynamic OpenMP runtime ({}): {}",
+                                    file_name,
+                                    dir.display()
+                                );
+                                iomp5_dynamic_dir = Some(dir.clone())
+                            }
                         }
                     }
                 }
@@ -399,17 +402,31 @@ impl Library {
             }
         }
 
-        if let Some(dir) = &self.iomp5_static_dir {
-            if dir != &self.library_dir {
-                println!("cargo:rustc-link-search={}", dir.display());
+        if self.config.parallel == Threading::OpenMP {
+            match (
+                self.iomp5_static_dir.as_ref(),
+                self.iomp5_dynamic_dir.as_ref(),
+            ) {
+                (Some(static_dir), Some(dynamic_dir)) => match self.config.link {
+                    LinkType::Static => {
+                        println!("cargo:rustc-link-search={}", static_dir.display());
+                    }
+                    LinkType::Dynamic => {
+                        println!("cargo:rustc-link-search={}", dynamic_dir.display());
+                    }
+                },
+                (Some(static_dir), None) => {
+                    println!("cargo:rustc-link-search={}", static_dir.display());
+                }
+                (None, Some(dynamic_dir)) => {
+                    println!("cargo:rustc-link-search={}", dynamic_dir.display());
+                }
+                _ => {
+                    bail!("OpenMP runtime not found");
+                }
             }
+            println!("cargo:rustc-link-lib={}", OPENMP_RUNTIME_LIB);
         }
-        if let Some(dir) = &self.iomp5_dynamic_dir {
-            if dir != &self.library_dir {
-                println!("cargo:rustc-link-search={}", dir.display());
-            }
-        }
-        println!("cargo:rustc-link-lib={}", OPENMP_RUNTIME_LIB);
         Ok(())
     }
 }
