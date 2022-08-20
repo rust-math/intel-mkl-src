@@ -364,7 +364,9 @@ impl Library {
             }
         }
         let mut libs = mkl_libs(self.config);
-        libs.push(OPENMP_RUNTIME_LIB.to_string());
+        if self.config.parallel == Threading::OpenMP {
+            libs.push(OPENMP_RUNTIME_LIB.to_string());
+        }
         for lib in libs {
             match self.config.link {
                 LinkType::Static => {
