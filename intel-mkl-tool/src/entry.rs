@@ -67,7 +67,7 @@ pub fn as_filename(link: LinkType, name: &str) -> String {
                 format!("lib{}.a", name)
             }
             LinkType::Dynamic => {
-                format!("lib{}.{}", name, std::env::consts::DLL_PREFIX)
+                format!("lib{}.{}", name, std::env::consts::DLL_EXTENSION)
             }
         }
     }
@@ -168,7 +168,7 @@ impl Library {
         let mut library_dir = None;
         let mut include_dir = None;
         let mut iomp5_dir = None;
-        for path in walkdir::WalkDir::new(root_dir)
+        for (dir, file_name) in walkdir::WalkDir::new(root_dir)
             .into_iter()
             .flatten() // skip unreadable directories
             .flat_map(|entry| {
@@ -190,59 +190,56 @@ impl Library {
                 }) {
                     return None;
                 }
-                Some(path)
+
+                let dir = path
+                    .parent()
+                    .expect("parent must exist here since this is under `root_dir`")
+                    .to_owned();
+
+                if let Some(Some(file_name)) = path.file_name().map(|f| f.to_str()) {
+                    Some((dir, file_name.to_string()))
+                } else {
+                    None
+                }
             })
         {
-            let dir = path
-                .parent()
-                .expect("parent must exist here since this is under `root_dir`")
-                .to_owned();
-
-            let (stem, ext) = match (path.file_stem(), path.extension()) {
-                (Some(stem), Some(ext)) => (
-                    stem.to_str().context("Non UTF8 filename")?,
-                    ext.to_str().context("Non UTF8 filename")?,
-                ),
-                _ => continue,
-            };
-
-            if stem == "mkl" && ext == "h" {
-                log::info!("Found mkl.h: {}", path.display());
+            if include_dir.is_none() && file_name == "mkl.h" {
+                log::info!("Found mkl.h at {}", dir.display());
                 include_dir = Some(dir);
                 continue;
             }
 
-            let name = if let Some(name) = stem.strip_prefix(std::env::consts::DLL_PREFIX) {
-                name
-            } else {
-                continue;
-            };
+            if library_dir.is_none() {
+                for name in mkl_libs(config) {
+                    if file_name == as_filename(config.link, &name) {
+                        log::info!("Found {} at {}", file_name, dir.display());
+                        library_dir = Some(dir.clone());
+                        continue;
+                    }
+                }
+            }
 
-            match name {
-                "mkl_core" => {
-                    match (config.link, ext) {
-                        (LinkType::Static, STATIC_EXTENSION)
-                        | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
-                        _ => continue,
-                    }
-                    log::info!("Found: {}", path.display());
-                    library_dir = Some(dir);
-                }
-                "iomp5" => {
-                    // Allow both dynamic/static library by default
-                    //
-                    // This is due to some distribution does not provide libiomp5.a
-                    if cfg!(feature = "openmp-strict-link-type") {
-                        match (config.link, ext) {
-                            (LinkType::Static, STATIC_EXTENSION)
-                            | (LinkType::Dynamic, std::env::consts::DLL_EXTENSION) => {}
-                            _ => continue,
+            if file_name.starts_with(OPENMP_RUNTIME_LIB) {
+                // Allow both dynamic/static library by default
+                //
+                // This is due to some distribution does not provide libiomp5.a
+                if cfg!(feature = "openmp-strict-link-type") {
+                    let ext = match config.link {
+                        LinkType::Static => {
+                            if cfg!(any(target_os = "linux", target_os = "macos")) {
+                                "a"
+                            } else {
+                                "lib"
+                            }
                         }
+                        LinkType::Dynamic => std::env::consts::DLL_EXTENSION,
+                    };
+                    if !file_name.ends_with(ext) {
+                        continue;
                     }
-                    log::info!("Found: {}", path.display());
-                    iomp5_dir = Some(dir);
                 }
-                _ => {}
+                log::info!("Found OpenMP runtime ({}): {}", file_name, dir.display());
+                iomp5_dir = Some(dir);
             }
         }
         if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {
