@@ -51,7 +51,7 @@ pub fn mkl_dyn_libs(cfg: Config) -> Vec<String> {
 }
 
 /// Filename convention for MKL libraries.
-pub fn as_filename(link: LinkType, name: &str) -> String {
+pub fn mkl_file_name(link: LinkType, name: &str) -> String {
     if cfg!(target_os = "windows") {
         match link {
             LinkType::Static => {
@@ -78,6 +78,30 @@ pub const OPENMP_RUNTIME_LIB: &str = if cfg!(target_os = "windows") {
 } else {
     "iomp5"
 };
+
+/// Filename convention for OpenMP runtime.
+pub fn openmp_runtime_file_name(link: LinkType) -> String {
+    let name = OPENMP_RUNTIME_LIB;
+    if cfg!(target_os = "windows") {
+        match link {
+            LinkType::Static => {
+                format!("{}.lib", name)
+            }
+            LinkType::Dynamic => {
+                format!("{}.dll", name)
+            }
+        }
+    } else {
+        match link {
+            LinkType::Static => {
+                format!("lib{}.a", name)
+            }
+            LinkType::Dynamic => {
+                format!("lib{}.{}", name, std::env::consts::DLL_EXTENSION)
+            }
+        }
+    }
+}
 
 /// Lacked definition of [std::env::consts]
 pub const STATIC_EXTENSION: &str = if cfg!(any(target_os = "linux", target_os = "macos")) {
@@ -211,7 +235,7 @@ impl Library {
 
             if library_dir.is_none() {
                 for name in mkl_libs(config) {
-                    if file_name == as_filename(config.link, &name) {
+                    if file_name == mkl_file_name(config.link, &name) {
                         log::info!("Found {} at {}", file_name, dir.display());
                         library_dir = Some(dir.clone());
                         continue;
@@ -219,27 +243,20 @@ impl Library {
                 }
             }
 
-            if file_name.starts_with(OPENMP_RUNTIME_LIB) {
-                // Allow both dynamic/static library by default
-                //
-                // This is due to some distribution does not provide libiomp5.a
-                if cfg!(feature = "openmp-strict-link-type") {
-                    let ext = match config.link {
-                        LinkType::Static => {
-                            if cfg!(any(target_os = "linux", target_os = "macos")) {
-                                "a"
-                            } else {
-                                "lib"
-                            }
-                        }
-                        LinkType::Dynamic => std::env::consts::DLL_EXTENSION,
-                    };
-                    if !file_name.ends_with(ext) {
-                        continue;
-                    }
+            // Allow both dynamic/static library by default
+            //
+            // This is due to some distribution does not provide libiomp5.a
+            let possible_link_types = if cfg!(feature = "openmp-strict-link-type") {
+                vec![config.link]
+            } else {
+                vec![config.link, config.link.otherwise()]
+            };
+            for link in possible_link_types {
+                if file_name == openmp_runtime_file_name(link) {
+                    log::info!("Found OpenMP runtime ({}): {}", file_name, dir.display());
+                    iomp5_dir = Some(dir.clone());
+                    continue;
                 }
-                log::info!("Found OpenMP runtime ({}): {}", file_name, dir.display());
-                iomp5_dir = Some(dir);
             }
         }
         if config.parallel == Threading::OpenMP && iomp5_dir.is_none() {

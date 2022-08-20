@@ -1,6 +1,19 @@
 use anyhow::{bail, Result};
 use std::{fmt, str::FromStr};
 
+macro_rules! impl_otherwise {
+    ($e:ident, $a:ident, $b:ident) => {
+        impl $e {
+            pub fn otherwise(&self) -> Self {
+                match self {
+                    $e::$a => $e::$b,
+                    $e::$b => $e::$a,
+                }
+            }
+        }
+    };
+}
+
 pub const VALID_CONFIGS: &[&str] = &[
     "mkl-dynamic-ilp64-iomp",
     "mkl-dynamic-ilp64-seq",
@@ -18,6 +31,7 @@ pub enum LinkType {
     Static,
     Dynamic,
 }
+impl_otherwise!(LinkType, Static, Dynamic);
 
 impl fmt::Display for LinkType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -56,6 +70,7 @@ pub enum DataModel {
     /// `int`, `long` and pointer are 64bit, i.e. `sizeof(int) == 8`
     ILP64,
 }
+impl_otherwise!(DataModel, LP64, ILP64);
 
 impl fmt::Display for DataModel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -91,6 +106,8 @@ pub enum Threading {
     /// No OpenMP runtime.
     Sequential,
 }
+
+impl_otherwise!(Threading, OpenMP, Sequential);
 
 impl Default for Threading {
     fn default() -> Self {
