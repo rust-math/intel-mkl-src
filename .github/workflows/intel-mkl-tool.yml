@@ -89,7 +89,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Get MKL using NuGet
-      run: nuget install intelmkl.devel.win-x64
+      run: |
+        nuget install intelmkl.devel.cluster.win-x64
+        nuget install intelmkl.static.cluster.win-x64
     - name: Run seek example
       uses: actions-rs/cargo@v1
       with:
