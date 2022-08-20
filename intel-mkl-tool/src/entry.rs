@@ -28,7 +28,12 @@ pub fn mkl_libs(cfg: Config) -> Vec<String> {
         }
     };
     libs.push("mkl_core".into());
-    libs
+
+    if cfg!(target_os = "windows") && cfg.link == LinkType::Dynamic {
+        libs.into_iter().map(|lib| format!("{}_dll", lib)).collect()
+    } else {
+        libs
+    }
 }
 
 /// MKL Libraries to be loaded dynamically
@@ -45,7 +50,12 @@ pub fn mkl_dyn_libs(cfg: Config) -> Vec<String> {
             libs.push("mkl_rt".into());
             libs.push("mkl_vml_mc2".into());
             libs.push("mkl_vml_cmpt".into());
-            libs
+
+            if cfg!(target_os = "windows") {
+                libs.into_iter().map(|lib| format!("{}_dll", lib)).collect()
+            } else {
+                libs
+            }
         }
     }
 }
@@ -53,14 +63,13 @@ pub fn mkl_dyn_libs(cfg: Config) -> Vec<String> {
 /// Filename convention for MKL libraries.
 pub fn mkl_file_name(link: LinkType, name: &str) -> String {
     if cfg!(target_os = "windows") {
-        match link {
-            LinkType::Static => {
-                format!("{}.lib", name)
-            }
-            LinkType::Dynamic => {
-                format!("{}_dll.lib", name)
-            }
-        }
+        // On windows
+        //
+        // - Static:  mkl_core.lib
+        // - Dynamic: mkl_core_dll.lib
+        //
+        // and `_dll` suffix is added in [mkl_libs] and [mkl_dyn_libs]
+        format!("{}.lib", name)
     } else {
         match link {
             LinkType::Static => {
