@@ -209,11 +209,11 @@ impl Library {
                 if path.is_dir() {
                     return None;
                 }
-                // Skip files under directory for ia32
+                // Skip files for 32bit system under `ia32*/` and `win-x86`
                 if path.components().any(|c| {
                     if let std::path::Component::Normal(c) = c {
                         if let Some(c) = c.to_str() {
-                            if c.starts_with("ia32") {
+                            if c.starts_with("ia32") || c == "win-x86" {
                                 return true;
                             }
                         }
