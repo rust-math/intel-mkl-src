@@ -24,22 +24,34 @@ use anyhow::{bail, Result};
 use intel_mkl_tool::*;
 use std::str::FromStr;
 
-#[cfg(feature = "mkl-static-lp64-iomp")]
-const MKL_CONFIG: &str = "mkl-static-lp64-iomp";
-#[cfg(feature = "mkl-static-lp64-seq")]
-const MKL_CONFIG: &str = "mkl-static-lp64-seq";
-#[cfg(feature = "mkl-static-ilp64-iomp")]
+macro_rules! def_mkl_config {
+    ($cfg:literal) => {
+        #[cfg(feature = $cfg)]
+        const MKL_CONFIG: &str = $cfg;
+    };
+}
+
+def_mkl_config!("mkl-static-lp64-iomp");
+def_mkl_config!("mkl-static-lp64-seq");
+def_mkl_config!("mkl-static-ilp64-iomp");
+def_mkl_config!("mkl-static-ilp64-seq");
+def_mkl_config!("mkl-dynamic-lp64-iomp");
+def_mkl_config!("mkl-dynamic-lp64-seq");
+def_mkl_config!("mkl-dynamic-ilp64-iomp");
+def_mkl_config!("mkl-dynamic-ilp64-seq");
+
+// Default value
+#[cfg(all(
+    not(feature = "mkl-static-lp64-iomp"),
+    not(feature = "mkl-static-lp64-seq"),
+    not(feature = "mkl-static-ilp64-iomp"),
+    not(feature = "mkl-static-ilp64-seq"),
+    not(feature = "mkl-dynamic-lp64-iomp"),
+    not(feature = "mkl-dynamic-lp64-seq"),
+    not(feature = "mkl-dynamic-ilp64-iomp"),
+    not(feature = "mkl-dynamic-ilp64-seq"),
+))]
 const MKL_CONFIG: &str = "mkl-static-ilp64-iomp";
-#[cfg(feature = "mkl-static-ilp64-seq")]
-const MKL_CONFIG: &str = "mkl-static-ilp64-seq";
-#[cfg(feature = "mkl-dynamic-lp64-iomp")]
-const MKL_CONFIG: &str = "mkl-dynamic-lp64-iomp";
-#[cfg(feature = "mkl-dynamic-lp64-seq")]
-const MKL_CONFIG: &str = "mkl-dynamic-lp64-seq";
-#[cfg(feature = "mkl-dynamic-ilp64-iomp")]
-const MKL_CONFIG: &str = "mkl-dynamic-ilp64-iomp";
-#[cfg(feature = "mkl-dynamic-ilp64-seq")]
-const MKL_CONFIG: &str = "mkl-dynamic-ilp64-seq";
 
 fn main() -> Result<()> {
     let cfg = Config::from_str(MKL_CONFIG).unwrap();
