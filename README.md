@@ -1,12 +1,10 @@
 # intel-mkl-src
 
-|crate         | crate.io                                                                                           | description                                                           |
-|:-------------|:---------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------|
-|intel-mkl-src | [![Crate](http://meritbadge.herokuapp.com/intel-mkl-src)](https://crates.io/crates/intel-mkl-src)  | Source crate for Intel-MKL                                            |
-|intel-mkl-sys | [![Crate](http://meritbadge.herokuapp.com/intel-mkl-sys)](https://crates.io/crates/intel-mkl-sys)  | FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
-|intel-mkl-tool| [![Crate](http://meritbadge.herokuapp.com/intel-mkl-tool)](https://crates.io/crates/intel-mkl-tool)| CLI utility for redistributing Intel-MKL                              |
-
-Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (since 0.4.0)
+|crate         | crate.io                                                                                               | description                                                           |
+|:-------------|:-------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------|
+|intel-mkl-src | [![crate](https://img.shields.io/crates/v/intel-mkl-src.svg)](https://crates.io/crates/intel-mkl-src)  | Source crate for Intel-MKL                                            |
+|intel-mkl-sys | [![Crate](https://img.shields.io/crates/v/intel-mkl-sys.svg)](https://crates.io/crates/intel-mkl-sys)  | FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
+|intel-mkl-tool| [![Crate](https://img.shields.io/crates/v/intel-mkl-tool.svg)](https://crates.io/crates/intel-mkl-tool)| Seek Intel-MKL libraries from filesystem                              |
 
 [VM]:  https://software.intel.com/en-us/mkl-developer-reference-c-vector-mathematical-functions
 [VSL]: https://software.intel.com/en-us/mkl-developer-reference-c-statistical-functions
@@ -31,7 +29,7 @@ This specify the data model:
 - `ilp64` means `int` (i), `long` (l), and pointers (p) are 64-bit.
 - `lp64` means `long` (l) and pointers (p) are 64-bit, `int` is 32-bit.
 
-### Thread management
+### Thread management (`iomp` or `seq`)
 
 - `iomp` means MKL uses Intel OpenMP runtime
 - `seq` means sequential (single thread) execution
