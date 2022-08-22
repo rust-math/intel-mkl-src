@@ -1,10 +1,10 @@
 # intel-mkl-src
 
-|crate         | crate.io                                                                                               | description                                                           |
-|:-------------|:-------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------|
-|intel-mkl-src | [![crate](https://img.shields.io/crates/v/intel-mkl-src.svg)](https://crates.io/crates/intel-mkl-src)  | Source crate for Intel-MKL                                            |
-|intel-mkl-sys | [![Crate](https://img.shields.io/crates/v/intel-mkl-sys.svg)](https://crates.io/crates/intel-mkl-sys)  | FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
-|intel-mkl-tool| [![Crate](https://img.shields.io/crates/v/intel-mkl-tool.svg)](https://crates.io/crates/intel-mkl-tool)| Seek Intel-MKL libraries from filesystem                              |
+|crate         | crate.io                                                                                               | docs.rs                                                                               | description                                                           |
+|:-------------|:-------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------|:---------------------------------------------------------------|
+|intel-mkl-src | [![crate](https://img.shields.io/crates/v/intel-mkl-src.svg)](https://crates.io/crates/intel-mkl-src)  | [![docs.rs](https://docs.rs/intel-mkl-src/badge.svg)](https://docs.rs/intel-mkl-src)  | Source crate for Intel-MKL                                            |
+|intel-mkl-sys | [![Crate](https://img.shields.io/crates/v/intel-mkl-sys.svg)](https://crates.io/crates/intel-mkl-sys)  | [![docs.rs](https://docs.rs/intel-mkl-sys/badge.svg)](https://docs.rs/intel-mkl-sys)  |FFI for Intel-MKL [vector math][VM], and [statistical functions][VSL] |
+|intel-mkl-tool| [![Crate](https://img.shields.io/crates/v/intel-mkl-tool.svg)](https://crates.io/crates/intel-mkl-tool)| [![docs.rs](https://docs.rs/intel-mkl-tool/badge.svg)](https://docs.rs/intel-mkl-tool)|Seek Intel-MKL libraries from filesystem                              |
 
 [VM]:  https://software.intel.com/en-us/mkl-developer-reference-c-vector-mathematical-functions
 [VSL]: https://software.intel.com/en-us/mkl-developer-reference-c-statistical-functions
