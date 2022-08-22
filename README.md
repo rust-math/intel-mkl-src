@@ -13,26 +13,30 @@ Redistribution of Intel MKL as a crate. Tested on Linux, macOS, and Windows (sin
 
 ## Supported features
 
-- `mkl-*-*-*` features specify which MKL to be linked
-  - `static` means MKL will be linked statically, and `dynamic` means MKL will be linked dynamically
-  - `lp64` means 32-bit integer interface, `ilp64` means 64-bit integer interface
-  - `iomp` means MKL uses Intel OpenMP, `seq` means sequential execution, e.g. no parallelization
-    - OpenMP is not supported for Windows currently [#46](https://github.com/rust-math/intel-mkl-src/issues/46)
-  - default is `mkl-static-ilp64-seq`, and you must choose one of them.
-  - macOS is not supported [#42](https://github.com/rust-math/intel-mkl-src/issues/42)
+`mkl-*-*-*` features specify which MKL to be linked as following.
+If any feature is set, default to `mkl-static-ilp64-iomp`.
 
-    | feature name           | Linux              | macOS              | Windows            |
-    |:-----------------------|:------------------:|:------------------:|:------------------:|
-    | mkl-static-lp64-iomp   | :heavy_check_mark: | -                  | -                  |
-    | mkl-static-lp64-seq    | :heavy_check_mark: | -                  | :heavy_check_mark: |
-    | mkl-static-ilp64-iomp  | :heavy_check_mark: | -                  | -                  |
-    | mkl-static-ilp64-seq   | :heavy_check_mark: | -                  | :heavy_check_mark: |
-    | mkl-dynamic-lp64-iomp  | :heavy_check_mark: | :heavy_check_mark: | -                  |
-    | mkl-dynamic-lp64-seq   | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-    | mkl-dynamic-ilp64-iomp | :heavy_check_mark: | :heavy_check_mark: | -                  |
-    | mkl-dynamic-ilp64-seq  | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+### Link type (`static` or `dynamic`)
+`dynamic` means MKL is linked dynamically, i.e. the executable does not contains MKL libraries
+and will seek them from filesystem while execution.
+This is better choice when the MKL libraries are managed by the system package manager e.g. `apt`.
 
-- `download` feature enables downloading MKL archive managed by this project from AWS S3 (default ON)
+`static` means MKL is linked statically, i.e. the MKL binaries are embedded in the executable file.
+This is better choice when creating portable executable, or system-managed MKL library does not exist.
+
+### Data model (`lp64` or `ilp64`)
+
+This specify the data model:
+
+- `ilp64` means `int` (i), `long` (l), and pointers (p) are 64-bit.
+- `lp64` means `long` (l) and pointers (p) are 64-bit, `int` is 32-bit.
+
+### Thread management
+
+- `iomp` means MKL uses Intel OpenMP runtime
+- `seq` means sequential (single thread) execution
+
+Using GNU OpenMP runtime (`libgomp`) is not supported in this project.
 
 ## Usage
 
@@ -46,25 +50,15 @@ fftw-sys = { version = "0.4", features = ["intel-mkl"] }
 
 ## How to find system MKL libraries
 
-This crate seeks system MKL libraries, e.g. installed by [apt], [yum], or official manual installer, as following manner:
+`intel-mkl-tool` crate seeks system MKL libraries, e.g. installed by various installer as following manner:
 
-- Check `${OUT_DIR}` where previous build has downloaded
-- Seek using [pkg-config] crate
-  - `${PKG_CONFIG_PATH}` has to be set correctly. It may not be set by default in usual install.
-  - You can confirm it by checking the following command returns error.
-    ```
-    pkg-config --libs mkl-dynamic-lp64-iomp
-    ```
-- Seek a directory set by `${MKLROOT}` environment variable
+- Seek using `pkg-config` command
+- Seek `${MKLROOT}` directory
 - Seek default installation path
   - `/opt/intel/mkl` for Linux
-  - `C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows` for Windows
+  - `C:/Program Files (x86)/IntelSWTools/` and `C:/Program Files (x86)/Intel/oneAPI` for Windows
 
-If not found any MKL library and `download` feature is ON, this crate will download archive from AWS S3 `rust-intel-mkl` bucket.
-
-[apt]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-apt-repo.html
-[yum]: https://software.intel.com/content/www/us/en/develop/articles/installing-intel-free-libs-and-python-yum-repo.html
-[pkg-config]: https://github.com/rust-lang/pkg-config-rs
+If `intel-mkl-tool` cannot find system MKL, `intel-mkl-src` try to download MKL binaries from OCI Registry.
 
 ## License
 MKL is distributed under the Intel Simplified Software License for Intel(R) Math Kernel Library, See [License.txt](License.txt).
