@@ -13,7 +13,7 @@
 
 ## Usage
 
-This crate is a `*-src` crate. This downloads and link Intel MKL, but does not introduce any symbols.
+`intel-mkl-src` crate is a `*-src` crate. This links MKL libraries to executable build by cargo, but does not provide Rust bindings.
 Please use `blas-sys`, `lapack-sys`, or `fftw-sys` to use BLAS, LAPACK, FFTW interface of MKL, e.g.
 
 ```toml
@@ -21,9 +21,14 @@ Please use `blas-sys`, `lapack-sys`, or `fftw-sys` to use BLAS, LAPACK, FFTW int
 fftw-sys = { version = "0.4", features = ["intel-mkl"] }
 ```
 
+Binding to MKL specific features are provided by `intel-mkl-sys` crate. This contains 
+
+- [Vector Mathematical Functions](https://www.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-c/top/vector-mathematical-functions.html)
+- [Statistical Functions](https://www.intel.com/content/www/us/en/develop/documentation/onemkl-developer-reference-c/top/statistical-functions.html)
+
 ## How to find system MKL libraries
 
-`intel-mkl-tool` crate seeks system MKL libraries, e.g. installed by various installer as following manner:
+`intel-mkl-tool` crate seeks system MKL library installed by various installer as following manner:
 
 - Seek using `pkg-config` command
 - Seek `${MKLROOT}` directory
@@ -31,11 +36,11 @@ fftw-sys = { version = "0.4", features = ["intel-mkl"] }
   - `/opt/intel/mkl` for Linux
   - `C:/Program Files (x86)/IntelSWTools/` and `C:/Program Files (x86)/Intel/oneAPI` for Windows
 
-If `intel-mkl-tool` cannot find system MKL, `intel-mkl-src` try to download MKL binaries from OCI Registry.
+If `intel-mkl-tool` does not find MKL library, `intel-mkl-src` try to download MKL binaries from [GitHub Container Registry (ghcr.io)](https://github.com/orgs/rust-math/packages?repo_name=rust-mkl-container).
 
 ## Supported features
 
-`mkl-*-*-*` features specify which MKL to be linked as following.
+There are 8 (=2x2x2) `mkl-*-*-*` features to specify how to link MKL libraries.
 If any feature is set, default to `mkl-static-ilp64-iomp`.
 
 ### Link type (`static` or `dynamic`)
@@ -44,7 +49,7 @@ and will seek them from filesystem while execution.
 This is better choice when the MKL libraries are managed by the system package manager e.g. `apt`.
 
 `static` means MKL is linked statically, i.e. the MKL binaries are embedded in the executable file.
-This is better choice when creating portable executable, or system-managed MKL library does not exist.
+This is better choice when creating portable executable.
 
 ### Data model (`lp64` or `ilp64`)
 
@@ -58,7 +63,7 @@ This specify the data model:
 - `iomp` means MKL uses Intel OpenMP runtime
 - `seq` means sequential (single thread) execution
 
-Using GNU OpenMP runtime (`libgomp`) is not supported in this project.
+Using GNU OpenMP runtime (`libgomp`) is not supported yet. Please see https://github.com/rust-math/intel-mkl-src/issues/97
 
 ## License
 MKL is distributed under the Intel Simplified Software License for Intel(R) Math Kernel Library, See [License.txt](License.txt).
