@@ -54,6 +54,10 @@ def_mkl_config!("mkl-dynamic-ilp64-seq");
 const MKL_CONFIG: &str = "mkl-static-ilp64-iomp";
 
 fn main() -> Result<()> {
+    if let Ok(_) = std::env::var("RUSTDOC") {
+        return Ok(());
+    }
+
     let cfg = Config::from_str(MKL_CONFIG).unwrap();
     if let Ok(lib) = Library::new(cfg) {
         lib.print_cargo_metadata()?;
