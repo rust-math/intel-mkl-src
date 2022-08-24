@@ -54,10 +54,6 @@ def_mkl_config!("mkl-dynamic-ilp64-seq");
 const MKL_CONFIG: &str = "mkl-static-ilp64-iomp";
 
 fn main() -> Result<()> {
-    if let Ok(_) = std::env::var("RUSTDOC") {
-        return Ok(());
-    }
-
     let cfg = Config::from_str(MKL_CONFIG).unwrap();
     if let Ok(lib) = Library::new(cfg) {
         lib.print_cargo_metadata()?;
@@ -70,12 +66,11 @@ fn main() -> Result<()> {
     // where ocipkg download archive is not searched by ld
     // unless user set `LD_LIBRARY_PATH` explictly.
     if cfg.link == LinkType::Static {
-        ocipkg::link_package(&format!(
+        let _ = ocipkg::link_package(&format!(
             "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
             MKL_CONFIG
-        ))?;
-        return Ok(());
+        ));
     }
 
-    bail!("No MKL found");
+    Ok(())
 }
