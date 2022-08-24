@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use intel_mkl_tool::*;
 use std::str::FromStr;
 
@@ -66,12 +66,11 @@ fn main() -> Result<()> {
     // where ocipkg download archive is not searched by ld
     // unless user set `LD_LIBRARY_PATH` explictly.
     if cfg.link == LinkType::Static {
-        ocipkg::link_package(&format!(
+        let _ = ocipkg::link_package(&format!(
             "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
             MKL_CONFIG
-        ))?;
-        return Ok(());
+        ));
     }
 
-    bail!("No MKL found");
+    Ok(())
 }
