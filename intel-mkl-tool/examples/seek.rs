@@ -14,5 +14,5 @@ fn main() -> ExitCode {
             num_not_found += 1;
         }
     }
-    return ExitCode::from(num_not_found);
+    ExitCode::from(num_not_found)
 }

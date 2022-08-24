@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use intel_mkl_tool::*;
 use std::str::FromStr;
 
