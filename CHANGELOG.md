@@ -24,8 +24,7 @@ In addition to original Keep-a-Changelog, we use following rules:
 
 ### Internal
 
-0.7.0+mkl2020.1 - 2022-07-29
-=============================
+## 0.7.0+mkl2020.1 - 2022-07-29
 
 Released 2 crates
 
@@ -42,8 +41,7 @@ Released 2 crates
   - dirs 4.0 https://github.com/rust-math/intel-mkl-src/pull/74
 - Repository of container image has been moved to GitHub Container Registry (ghcr.io) from DockerHub https://github.com/rust-math/intel-mkl-src/pull/60
 
-0.6.0+mkl2020.1 - 2020-06-23
-=============================
+## 0.6.0+mkl2020.1 - 2020-06-23
 
 Released 3 crates
 
@@ -73,8 +71,7 @@ Released 3 crates
 - Create MKL-enable Rust container https://github.com/rust-math/intel-mkl-src/pull/36
 - Switch to GitHub Actions https://github.com/rust-math/intel-mkl-src/pull/32
 
-0.5.0 - 2019-12-15
-===================
+## 0.5.0 - 2019-12-15
 
 ### Added
 - intel-mkl-sys sub-crate for vectorized math and statistiacl functions https://github.com/rust-math/intel-mkl-src/pull/26
