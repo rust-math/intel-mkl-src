@@ -1,12 +1,30 @@
-Unreleased
------------
+# Changelog
+
+- All notable changes to this project will be documented in this file.
+  - The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+  - and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+In addition to original Keep-a-Changelog, we use following rules:
+
+- Use [GitHub Flavored Markdown](https://github.github.com/gfm/)
+- Each line in changes SHOULD include a link to Pull Request in GitHub
+- Each Pull Request MUST add a line in this file
+  - This will be checked by GitHub Actions
+- Each Pull Request MAY correspond to one or more lines in this file
+
+## Unreleased
+
+### Added
+
+### Changed
 
 ### Fixed
 - Added path for libiomp5 static libraries under /opt/intel https://github.com/rust-math/intel-mkl-src/pull/63
 - make intel-mkl-tool use pkg-config canonically https://github.com/rust-math/intel-mkl-src/pull/65
 
-0.7.0+mkl2020.1 - 2022-07-29
-=============================
+### Internal
+
+## 0.7.0+mkl2020.1 - 2022-07-29
 
 Released 2 crates
 
@@ -23,8 +41,7 @@ Released 2 crates
   - dirs 4.0 https://github.com/rust-math/intel-mkl-src/pull/74
 - Repository of container image has been moved to GitHub Container Registry (ghcr.io) from DockerHub https://github.com/rust-math/intel-mkl-src/pull/60
 
-0.6.0+mkl2020.1 - 2020-06-23
-=============================
+## 0.6.0+mkl2020.1 - 2020-06-23
 
 Released 3 crates
 
@@ -54,8 +71,7 @@ Released 3 crates
 - Create MKL-enable Rust container https://github.com/rust-math/intel-mkl-src/pull/36
 - Switch to GitHub Actions https://github.com/rust-math/intel-mkl-src/pull/32
 
-0.5.0 - 2019-12-15
-===================
+## 0.5.0 - 2019-12-15
 
 ### Added
 - intel-mkl-sys sub-crate for vectorized math and statistiacl functions https://github.com/rust-math/intel-mkl-src/pull/26
