@@ -5,10 +5,12 @@ authors = ["Toshiki Teramura <toshiki.teramura@gmail.com>"]
 edition = "2018"
 rust-version = "1.61.0"
 
-description = "CLI utility for redistributiing Intel(R) MKL"
+description = "Seek Intel(R) MKL library from system"
 repository  = "https://github.com/rust-math/intel-mkl-src"
 keywords    = []
 license     = "MIT"
+
+readme = "../README.md"
 
 [features]
 # Do not allow linking dynamic library for mkl-static-*-iomp

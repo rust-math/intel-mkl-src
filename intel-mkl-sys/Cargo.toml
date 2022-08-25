@@ -6,10 +6,12 @@ edition = "2018"
 
 rust-version = "1.61.0"
 
-description = "FFI for Intel(R) MKL"
+description = "Rust binding of unique functions in Intel(R) MKL"
 repository  = "https://github.com/rust-math/intel-mkl-src"
 keywords    = ["ffi"]
-license     = "MIT"
+
+license-file = "../License.txt"
+readme = "../README.md"
 
 [features]
 default = []
