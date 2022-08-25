@@ -15,9 +15,6 @@ In addition to original Keep-a-Changelog, we use following rules:
 ## Unreleased
 
 ### Fixed
-- Remove `use *` for external crates https://github.com/rust-math/intel-mkl-src/pull/70
-- Added path for libiomp5 static libraries under /opt/intel https://github.com/rust-math/intel-mkl-src/pull/63
-- make intel-mkl-tool use pkg-config canonically https://github.com/rust-math/intel-mkl-src/pull/65
 
 ### Changed
 - Remove default feature, use mkl-static-ilp64-iomp if no feature https://github.com/rust-math/intel-mkl-src/pull/95
@@ -27,8 +24,6 @@ In addition to original Keep-a-Changelog, we use following rules:
   - `intel-mkl-tool::Library` supports windows https://github.com/rust-math/intel-mkl-src/pull/90
     - Support `mkl-dynamic-*-*` cases for Windows https://github.com/rust-math/intel-mkl-src/pull/94
 - Rename `intel_mkl_tool::Interface` to `DataModel`, `LinkType::Shared` to `Dynamic` https://github.com/rust-math/intel-mkl-src/pull/79
-- Minimal supported rustc version to 1.56.0, dirs 4.0 https://github.com/rust-math/intel-mkl-src/pull/73 https://github.com/rust-math/intel-mkl-src/pull/74
-- zstd version range `<=0.11, >=0.6` https://github.com/rust-math/intel-mkl-src/pull/71
 
 ### Added
 - Try ocipkg when MKL not found https://github.com/rust-math/intel-mkl-src/pull/88
@@ -40,7 +35,7 @@ In addition to original Keep-a-Changelog, we use following rules:
   - Create new archive using ocipkg https://github.com/rust-math/intel-mkl-src/pull/84
   - Add patch version in container https://github.com/rust-math/intel-mkl-src/pull/83
 - Drop `download` feature https://github.com/rust-math/intel-mkl-src/pull/82
-- Drop `download` from default feature https://github.com/rust-math/intel-mkl-src/pull/75
+  - Drop `download` from default feature https://github.com/rust-math/intel-mkl-src/pull/75
 - Remove `xdg-data-home` experimental feature https://github.com/rust-math/intel-mkl-src/pull/80
 
 ### Internal
