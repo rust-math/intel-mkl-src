@@ -34,17 +34,11 @@ jobs:
       image: ${{ matrix.image }}
     steps:
       - uses: actions/checkout@v1
-
       - uses: actions-rs/cargo@v1
         if: matrix.image == 'rust:1.62.1'
         with:
           command: install
-          args: ocipkg-cli --version=0.2.3
-      - name: Login to ghcr.io
-        if: matrix.image == 'rust:1.62.1'
-        run: |
-          ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
-
+          args: ocipkg-cli
       - uses: actions-rs/cargo@v1
         with:
           command: test
