@@ -27,6 +27,7 @@ In addition to original Keep-a-Changelog, we use following rules:
 
 ### Added
 - Try ocipkg when MKL not found https://github.com/rust-math/intel-mkl-src/pull/88
+  - ocipkg 0.2.6, anonymous pulling container https://github.com/rust-math/intel-mkl-src/pull/101
 
 ### Removed
 - Split container management as another repository https://github.com/rust-math/rust-mkl-container
