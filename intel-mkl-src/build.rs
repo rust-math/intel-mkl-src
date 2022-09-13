@@ -66,10 +66,18 @@ fn main() -> Result<()> {
     // where ocipkg download archive is not searched by ld
     // unless user set `LD_LIBRARY_PATH` explictly.
     if cfg.link == LinkType::Static {
-        let _ = ocipkg::link_package(&format!(
-            "ghcr.io/rust-math/rust-mkl/{}:2020.1-2851133947",
-            MKL_CONFIG
-        ));
+        if cfg!(target_os = "linux") {
+            let _ = ocipkg::link_package(&format!(
+                "ghcr.io/rust-math/rust-mkl/linux/{}:2020.1-3038006115",
+                MKL_CONFIG
+            ));
+        }
+        if cfg!(target_os = "windows") {
+            let _ = ocipkg::link_package(&format!(
+                "ghcr.io/rust-math/rust-mkl/windows/{}:2022.0-3038006115",
+                MKL_CONFIG
+            ));
+        }
     }
 
     Ok(())
