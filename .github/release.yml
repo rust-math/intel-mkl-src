@@ -1,0 +1,24 @@
+# Keep-a-Changelog style release note
+changelog:
+  categories:
+    - title: Bug fixes
+      labels:
+        - bug
+    - title: New features
+      labels:
+        - add
+    - title: Changed
+      labels:
+        - change
+    - title: Deprecated
+      labels:
+        - deprecate
+    - title: Removed
+      labels:
+        - remove
+    - title: Security
+      labels:
+        - security
+    - title: Others
+      labels:
+        - "*"

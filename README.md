@@ -1,7 +1,5 @@
 # intel-mkl-src
 
-[![changelog](https://img.shields.io/badge/CHANGELOG-Unreleased-informational)](./CHANGELOG.md)
-
 |crate         | crate.io                                                                                               | docs.rs                                                                               | master                                                                                                                                    | description                                                           |
 |:-------------|:-------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------|
 |intel-mkl-src | [![crate](https://img.shields.io/crates/v/intel-mkl-src.svg)](https://crates.io/crates/intel-mkl-src)  | [![docs.rs](https://docs.rs/intel-mkl-src/badge.svg)](https://docs.rs/intel-mkl-src)  | [![crate](https://img.shields.io/badge/master-intel--mkl--src-blue)](https://rust-math.github.io/intel-mkl-src/intel_mkl_src/index.html)  | Source crate for Intel-MKL                                            |
