@@ -49,10 +49,6 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions-rs/cargo@v1
         with:
-          command: install
-          args: ocipkg-cli
-      - uses: actions-rs/cargo@v1
-        with:
           command: test
           args: >
             --manifest-path=intel-mkl-sys/Cargo.toml
@@ -87,7 +83,25 @@ jobs:
           command: test
           args: >
             --manifest-path=intel-mkl-sys/Cargo.toml
-            --no-default-features
             --features=${{ matrix.feature }}
         env:
           MKLROOT: ${{ github.workspace }}
+
+  windows-ocipkg:
+    strategy:
+      fail-fast: false
+      matrix:
+        feature:
+          - mkl-static-lp64-iomp
+          - mkl-static-lp64-seq
+          - mkl-static-ilp64-iomp
+          - mkl-static-ilp64-seq
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: >
+            --manifest-path=intel-mkl-sys/Cargo.toml
+            --features=${{ matrix.feature }}
